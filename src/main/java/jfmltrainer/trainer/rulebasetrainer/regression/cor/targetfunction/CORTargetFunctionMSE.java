@@ -31,7 +31,7 @@ public class CORTargetFunctionMSE implements CORTargetFunction {
         return Utils.computeMSE(realValueList, defuzzifiedPredictedValueList);
     }
 
-    private List<Float> defuzzifyPrediction(FuzzyRuleType rule) { // TODO
+    private List<Float> defuzzifyPrediction(FuzzyRuleType rule) {
 
         List<FuzzyTerm> termList = rule.getConsequent().getThen().getClause().stream()
                 .map(clause -> (FuzzyTerm) clause.getTerm())

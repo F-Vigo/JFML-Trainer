@@ -23,15 +23,14 @@ public class WangMendel extends RegressionTrainer {
     @Override
     public ImmutablePair<KnowledgeBaseType, RuleBaseType> trainRuleBase(Data data, KnowledgeBaseType knowledgeBase, MethodConfig methodConfig) {
         List<ImmutablePair<Instance, FuzzyRuleType>> candidateRuleList = WangMendelUtils.generateWMCandidateRuleList(data, knowledgeBase);
-        List<ImmutablePair<Instance, FuzzyRuleType>> weightedRuleSet = enrichRuleSetWithWeight(candidateRuleList, methodConfig.getAndOperator().get(), methodConfig.getThenOperator().get());
-        List<FuzzyRuleType> prunedRuleList = prune(weightedRuleSet);
+        List<ImmutablePair<Instance, FuzzyRuleType>> weightedRuleList = enrichRuleListWithWeight(candidateRuleList, methodConfig.getAndOperator().get(), methodConfig.getThenOperator().get());
+        List<FuzzyRuleType> prunedRuleList = prune(weightedRuleList);
         RuleBaseType ruleBase = RuleBaseTrainerUtils.buildRuleBase(prunedRuleList);
         return new ImmutablePair<>(knowledgeBase, ruleBase);
     }
 
 
-
-    private List<ImmutablePair<Instance, FuzzyRuleType>> enrichRuleSetWithWeight(List<ImmutablePair<Instance, FuzzyRuleType>> candidateRuleList, AndOperator andOperator, ThenOperator implicationOperator) {
+    private List<ImmutablePair<Instance, FuzzyRuleType>> enrichRuleListWithWeight(List<ImmutablePair<Instance, FuzzyRuleType>> candidateRuleList, AndOperator andOperator, ThenOperator implicationOperator) {
         List<ImmutablePair<Instance, FuzzyRuleType>> ruleList = new ArrayList<>();
         candidateRuleList
                 .forEach(instanceAndRule -> {

@@ -4,7 +4,7 @@ import jfmltrainer.data.instance.RegressionInstance;
 
 import java.util.List;
 
-public class AnfisFirstLayer {
+public class AnfisFirstLayer { // Data values retrieving
 
     public List<Float> run(RegressionInstance instance) {
         return instance.getAntecedentValueList();

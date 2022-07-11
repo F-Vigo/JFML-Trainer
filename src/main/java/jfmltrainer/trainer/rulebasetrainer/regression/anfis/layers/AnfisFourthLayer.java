@@ -3,7 +3,8 @@ package jfmltrainer.trainer.rulebasetrainer.regression.anfis.layers;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class AnfisFourthLayer {
+public class AnfisFourthLayer { // Normalization
+
     public List<Float> run(List<Float> input) {
         return input.stream()
                 .map(matchingDegree -> normalize(matchingDegree, input))

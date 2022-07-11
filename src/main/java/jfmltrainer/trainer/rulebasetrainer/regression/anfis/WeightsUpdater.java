@@ -15,21 +15,34 @@ public class WeightsUpdater {
 
     private Float LEARNING_RATE = 0.01F; // TODO
 
-    public Weights updateWeights(Weights weights, List<Float> iterationsPredictedValueList, Data data, Integer nRules, List<Integer> nTermList, AnfisFirstLayer firstLayer, AnfisSecondLayer secondLayer, AnfisThirdLayer thirdLayer, AnfisFourthLayer fourthLayer, AnfisFifthLayer fifthLayer) {
-
-        Weights weightIncrement = getWeightIncrement(data, iterationsPredictedValueList, weights, nRules, nTermList, firstLayer, secondLayer, thirdLayer, fourthLayer, fifthLayer);
-
-        Integer secondLayerWeightSize = weights.getSecondLayerWeights().stream()
-                .map(List::size)
-                .reduce(Integer::sum)
-                .get() * 2;
-
+    public Weights updateWeights(
+            Weights weights,
+            List<Float> iterationsPredictedValueList,
+            Data data,
+            Integer nRules,
+            List<Integer> nTermList,
+            AnfisFirstLayer firstLayer,
+            AnfisSecondLayer secondLayer,
+            AnfisThirdLayer thirdLayer,
+            AnfisFourthLayer fourthLayer
+    ) {
+        Weights weightIncrement = getWeightIncrement(data, iterationsPredictedValueList, weights, nRules, nTermList, firstLayer, secondLayer, thirdLayer, fourthLayer);
         List<List<ImmutablePair<Float, Float>>> newSecondLayerWeights = updateSecondLayerWeights(weights.getSecondLayerWeights(), weightIncrement.getSecondLayerWeights());
         List<List<Float>> newFifthLayerWeighs = updateFifthLayerWeights(weights.getFifthLayerWeights(), weightIncrement.getFifthLayerWeights());
         return new Weights(newSecondLayerWeights, newFifthLayerWeighs);
     }
 
-    private Weights getWeightIncrement(Data<RegressionInstance> data, List<Float> iterationsPredictedValueList, Weights currentWeights, Integer nRules, List<Integer> nTermList, AnfisFirstLayer firstLayer, AnfisSecondLayer secondLayer, AnfisThirdLayer thirdLayer, AnfisFourthLayer fourthLayer, AnfisFifthLayer fifthLayer) {
+    private Weights getWeightIncrement(
+            Data<RegressionInstance> data,
+            List<Float> iterationsPredictedValueList,
+            Weights currentWeights,
+            Integer nRules,
+            List<Integer> nTermList,
+            AnfisFirstLayer firstLayer,
+            AnfisSecondLayer secondLayer,
+            AnfisThirdLayer thirdLayer,
+            AnfisFourthLayer fourthLayer
+    ) {
 
         List<Float> realValueList = data.getInstanceList().stream()
                 .map(instance -> instance.getConsequentValueList().get(0))
@@ -40,35 +53,60 @@ public class WeightsUpdater {
                 .map(i -> iterationsPredictedValueList.get(i) - realValueList.get(i))
                 .collect(Collectors.toList());
 
-        List<List<ImmutablePair<Float, Float>>> secondLayerDerivative = getSecondLayerDerivative(data, outputDifference, currentWeights, nTermList, firstLayer, secondLayer, thirdLayer, fourthLayer, fifthLayer);
+        List<List<ImmutablePair<Float, Float>>> secondLayerDerivative = getSecondLayerDerivative(data, outputDifference, currentWeights, nTermList, firstLayer, secondLayer, thirdLayer, fourthLayer);
 
-        List<List<Float>> sixthLayerDerivative = new ArrayList<>(nRules);
+        List<List<Float>> fifthLayerDerivative = new ArrayList<>(nRules);
         List<Float> derivativeForAnyRule = getDerivativeForAnyRule(data, outputDifference);
-        Collections.fill(sixthLayerDerivative, derivativeForAnyRule);
+        Collections.fill(fifthLayerDerivative, derivativeForAnyRule);
 
-        return new Weights(secondLayerDerivative, sixthLayerDerivative); // TODO
+        return new Weights(secondLayerDerivative, fifthLayerDerivative);
     }
 
 
 
     // SECOND LAYER //
 
-    private List<List<ImmutablePair<Float, Float>>> getSecondLayerDerivative(Data<RegressionInstance> data, List<Float> outputDifference, Weights currentWeights, List<Integer> nTermList, AnfisFirstLayer firstLayer, AnfisSecondLayer secondLayer, AnfisThirdLayer thirdLayer, AnfisFourthLayer fourthLayer, AnfisFifthLayer fifthLayer) {
+    private List<List<ImmutablePair<Float, Float>>> getSecondLayerDerivative(
+            Data<RegressionInstance> data,
+            List<Float> outputDifference,
+            Weights currentWeights,
+            List<Integer> nTermList,
+            AnfisFirstLayer firstLayer,
+            AnfisSecondLayer secondLayer,
+            AnfisThirdLayer thirdLayer,
+            AnfisFourthLayer fourthLayer
+    ) {
         Integer N = data.getInstanceList().size();
         List<List<List<ImmutablePair<Float, Float>>>> perInstance = IntStream.range(0, N).boxed()
-                .map(instanceIndex -> getSecondLayerDerivativePerInstance(data.getInstanceList().get(instanceIndex), outputDifference.get(instanceIndex), currentWeights, nTermList, firstLayer, secondLayer, thirdLayer, fourthLayer, fifthLayer))
+                .map(instanceIndex -> getSecondLayerDerivativePerInstance(
+                        data.getInstanceList().get(instanceIndex),
+                        outputDifference.get(instanceIndex),
+                        currentWeights,
+                        nTermList,
+                        firstLayer,
+                        secondLayer,
+                        thirdLayer,
+                        fourthLayer
+                ))
                 .collect(Collectors.toList());
         return getSecondLayerDerivativeMean(perInstance, nTermList);
     }
 
-    private List<List<ImmutablePair<Float, Float>>> getSecondLayerDerivativePerInstance(RegressionInstance instance, Float outputDifference, Weights currentWeights, List<Integer> nTermList, AnfisFirstLayer firstLayer, AnfisSecondLayer secondLayer, AnfisThirdLayer thirdLayer, AnfisFourthLayer fourthLayer, AnfisFifthLayer fifthLayer) {
+    private List<List<ImmutablePair<Float, Float>>> getSecondLayerDerivativePerInstance(
+            RegressionInstance instance,
+            Float outputDifference,
+            Weights currentWeights,
+            List<Integer> nTermList,
+            AnfisFirstLayer firstLayer,
+            AnfisSecondLayer secondLayer,
+            AnfisThirdLayer thirdLayer,
+            AnfisFourthLayer fourthLayer
+    ) {
 
-        // TODO - Rewrite
         List<Float> firstLayerOutput = firstLayer.run(instance);
         List<List<Float>> secondLayerOutput = secondLayer.run(firstLayerOutput, currentWeights.getSecondLayerWeights());
         List<Float> thirdLayerOutput = thirdLayer.run(secondLayerOutput);
         List<Float> fourthLayerOutput = fourthLayer.run(thirdLayerOutput);
-        List<Float> fifthLayerOutput = fifthLayer.run(fourthLayerOutput, instance, currentWeights.getFifthLayerWeights());
 
         // These variable names refer to the calculations according to the chain rule
         Matrix secondOverWeights = getSecondOverWeightsMatrix(instance, currentWeights, nTermList);
@@ -82,9 +120,9 @@ public class WeightsUpdater {
                 .then(m -> thirdOverSecond.dot(m).get())
                 .then(m -> fourthOverThird.dot(m).get())
                 .then(m -> fifthOverFourth.dot(m).get())
-                .then(m -> sixthOverFifth.dot(fifthOverFourth).get())
+                .then(m -> sixthOverFifth.dot(m).get())
                 .then(m -> errorOverSixth.dot(m).get())
-                .get(); // shape = 1 x sum(nTermList)
+                .get(); // Shape = 1 x sum(nTermList)
 
         List<List<ImmutablePair<Float, Float>>> result = new ArrayList<>();
         for (int i = 0; i < nTermList.size(); i ++) {
@@ -100,11 +138,27 @@ public class WeightsUpdater {
         return result;
     }
 
-    private Matrix getErrorOverSixthMatrix(Float value) {
-        Matrix result = new Matrix(1, 1);
-        result.set(1, 1, value);
+
+    private List<List<ImmutablePair<Float, Float>>> getSecondLayerDerivativeMean(List<List<List<ImmutablePair<Float, Float>>>> perInstance, List<Integer> nTermList) {
+        List<List<ImmutablePair<Float, Float>>> result = new ArrayList<>();
+        Integer N = perInstance.size();
+        for (int variableIndex = 0; variableIndex < nTermList.size(); variableIndex++) {
+            List<ImmutablePair<Float, Float>> perVariable = new ArrayList<>();
+            for (int termIndex = 0; termIndex < nTermList.get(variableIndex); termIndex++) {
+                int finalVariableIndex = variableIndex;
+                int finalTermIndex = termIndex;
+                Float a = IntStream.range(0, N).boxed().map(instanceIndex -> perInstance.get(instanceIndex).get(finalVariableIndex).get(finalTermIndex).getLeft()).reduce(Float::sum).get()/N;
+                Float b = IntStream.range(0, N).boxed().map(instanceIndex -> perInstance.get(instanceIndex).get(finalVariableIndex).get(finalTermIndex).getRight()).reduce(Float::sum).get()/N;
+                perVariable.add(new ImmutablePair<>(a, b));
+            }
+            result.add(perVariable);
+        }
         return result;
     }
+
+
+
+    // MATRICES //
 
 
     private Matrix getSecondOverWeightsMatrix(RegressionInstance instance, Weights currentWeights, List<Integer> nTermList) {
@@ -136,7 +190,6 @@ public class WeightsUpdater {
         return result;
     }
 
-
     private Matrix getThirdOverSecondMatrix(List<Integer> nTermList, List<List<Float>> secondLayerOutput) {
 
         Integer m = nTermList.stream().reduce((x,y)->x*y).get();
@@ -159,7 +212,6 @@ public class WeightsUpdater {
         return result;
     }
 
-
     private Matrix getFourthOverThirdMatrix(List<Float> thirdLayerOutput) {
         Integer m = thirdLayerOutput.size();
         Float sum = thirdLayerOutput.stream().reduce(Float::sum).get();
@@ -168,13 +220,12 @@ public class WeightsUpdater {
         for (int i = 0; i < thirdLayerOutput.size(); i++) {
             for (int j = 0; j < thirdLayerOutput.size(); j++) {
                 result.set(i, j, i == j
-                    ? (sum - thirdLayerOutput.get(j)) / sumSquared
-                    : -thirdLayerOutput.get(j) / sumSquared);
+                        ? (sum - thirdLayerOutput.get(j)) / sumSquared
+                        : -thirdLayerOutput.get(j) / sumSquared);
             }
         }
         return result;
     }
-
 
     private Matrix getFifthOverFourthMatrix(List<Float> fourthLayerOutput, RegressionInstance instance, Weights currentWeights) {
         Integer m = fourthLayerOutput.size();
@@ -185,7 +236,6 @@ public class WeightsUpdater {
         return result;
     }
 
-
     private Matrix getSixthOverFifthMatrix(int n) {
         Matrix result = new Matrix(1, n);
         for (int i = 0; i < n; i++) {
@@ -194,31 +244,11 @@ public class WeightsUpdater {
         return result;
     }
 
-
-
-
-
-    private List<List<ImmutablePair<Float, Float>>> getSecondLayerDerivativeMean(List<List<List<ImmutablePair<Float, Float>>>> perInstance, List<Integer> nTermList) {
-        List<List<ImmutablePair<Float, Float>>> result = new ArrayList<>();
-        Integer N = perInstance.size();
-        for (int variableIndex = 0; variableIndex < nTermList.size(); variableIndex++) {
-            List<ImmutablePair<Float, Float>> perVariable = new ArrayList<>();
-            for (int termIndex = 0; termIndex < nTermList.get(variableIndex); termIndex++) {
-                int finalVariableIndex = variableIndex;
-                int finalTermIndex = termIndex;
-                Float a = IntStream.range(0, N).boxed().map(instanceIndex -> perInstance.get(instanceIndex).get(finalVariableIndex).get(finalTermIndex).getLeft()).reduce(Float::sum).get()/N;
-                Float b = IntStream.range(0, N).boxed().map(instanceIndex -> perInstance.get(instanceIndex).get(finalVariableIndex).get(finalTermIndex).getRight()).reduce(Float::sum).get()/N;
-                perVariable.add(new ImmutablePair<>(a, b));
-            }
-            result.add(perVariable);
-        }
+    private Matrix getErrorOverSixthMatrix(Float value) {
+        Matrix result = new Matrix(1, 1);
+        result.set(1, 1, value);
         return result;
     }
-
-
-
-
-
 
 
 
@@ -246,11 +276,7 @@ public class WeightsUpdater {
 
 
 
-
-
-
     // UPDATING //
-
 
     private List<List<ImmutablePair<Float, Float>>> updateSecondLayerWeights(List<List<ImmutablePair<Float, Float>>> current, List<List<ImmutablePair<Float, Float>>> increment) {
         List<List<ImmutablePair<Float, Float>>> result = new ArrayList<>();
@@ -277,71 +303,6 @@ public class WeightsUpdater {
             }
             result.add(perRule);
         }
-        return result;
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    private Weights fromListToWeights(List<Float> list, Weights reference) {
-
-        List<List<ImmutablePair<Float, Float>>> newSecondLayerWeights = new ArrayList<>();
-        List<List<Float>> newFifthLayerWeights = new ArrayList<>();
-
-        for (int i = 0; i < reference.getSecondLayerWeights().size(); i ++) {
-            List<ImmutablePair<Float, Float>> perVariable = new ArrayList<>();
-            Integer nTerm = reference.getSecondLayerWeights().get(i).size();
-            for (int j = 0; j < nTerm; j+=2) {
-                perVariable.add(new ImmutablePair<>(list.get(i*nTerm+j), list.get(i*nTerm+j+1)));
-            }
-            newSecondLayerWeights.add(perVariable);
-        }
-
-        Integer secondLayerPartSize = reference.getSecondLayerWeights().stream()
-                .map(perVariable -> perVariable.size())
-                .reduce(Integer::sum)
-                .get() * 2;
-
-        for (int i = 0; i < reference.getFifthLayerWeights().size(); i++) {
-            Integer ruleSize = reference.getFifthLayerWeights().get(0).size();
-            List<Float> perRule = new ArrayList<>();
-            for (int j = 0; j < ruleSize; j++) {
-                Integer actualPosition = secondLayerPartSize + i*ruleSize + j;
-                perRule.add(list.get(actualPosition));
-            }
-            newFifthLayerWeights.add(perRule);
-        }
-        return new Weights(newSecondLayerWeights, newFifthLayerWeights);
-    }
-
-
-    private List<Float> fromWeightsToList(Weights weights) {
-
-        List<Float> result = new ArrayList<>();
-
-        weights.getSecondLayerWeights().forEach(perVariable -> perVariable.forEach(pair -> {
-            result.add(pair.getLeft());
-            result.add(pair.getRight());
-        }));
-
-        weights.getFifthLayerWeights().forEach(result::addAll);
-
         return result;
     }
 }

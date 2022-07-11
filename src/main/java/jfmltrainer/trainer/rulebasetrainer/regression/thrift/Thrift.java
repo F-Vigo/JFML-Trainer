@@ -21,9 +21,7 @@ public class Thrift extends RegressionTrainer {
 
     private static Integer MAX_ITER = 100; // TODO
     private static Integer POPULATION_SIZE = 100; // TODO
-
     private static Float MUTATION_PROB = 0.8F; // TODO
-
     private static Evaluator evaluator = new Evaluator();
 
     @Override
@@ -37,18 +35,21 @@ public class Thrift extends RegressionTrainer {
         for (int i = 0; i < MAX_ITER; i++) {
             population = nextGeneration(population, data, knowledgeBase, methodConfig);
         }
-        List<List<FuzzyTermType>> splitTermList = decodeChromosome(population.get(0), knowledgeBase);
+        List<List<FuzzyTermType>> splitTermList = decodeChromosome(population.get(0), knowledgeBase); // The first element is the best
         List<FuzzyRuleType> ruleList = splitTermList.stream()
                 .map(termList -> RuleBaseTrainerUtils.buildRuleFromTermList(termList, knowledgeBase))
                 .collect(Collectors.toList());
         return ruleList;
     }
 
+
+
+    // INITIAL POPULATION //
+
     private List<Chromosome> getInitialPopulation(Data<RegressionInstance> data, KnowledgeBaseType knowledgeBase, MethodConfig methodConfig) {
         List<Chromosome> population = new ArrayList<>();
-        Integer nGenes = getNGenes(knowledgeBase);
         for (int i = 0; i < POPULATION_SIZE; i++) {
-            List<Optional<FuzzyTermType>> geneList = getRandomGeneList(nGenes, knowledgeBase, methodConfig).stream()
+            List<Optional<FuzzyTermType>> geneList = getRandomGeneList(getNGenes(knowledgeBase), knowledgeBase, methodConfig).stream()
                     .map(Optional::ofNullable)
                     .collect(Collectors.toList());
             Chromosome chromosome = new Chromosome(geneList, null);
@@ -59,68 +60,46 @@ public class Thrift extends RegressionTrainer {
         return population;
     }
 
+    private Integer getNGenes(KnowledgeBaseType knowledgeBase) {
+        return knowledgeBase.getKnowledgeBaseVariables().stream()
+                .filter(KnowledgeBaseVariable::isInput)
+                .map(var -> var.getTerms().size())
+                .reduce((x, y) -> x * y)
+                .get();
+    }
+
+    private List<FuzzyTermType> getRandomGeneList(Integer nGenes, KnowledgeBaseType knowledgeBase, MethodConfig methodConfig) {
+        List<FuzzyTermType> geneList = new ArrayList<>();
+        Integer outputPos = IntStream.range(0, knowledgeBase.getKnowledgeBaseVariables().size()).boxed()
+                .filter(i -> knowledgeBase.getKnowledgeBaseVariables().get(i).isOutput())
+                .findFirst().get();
+        for (int i = 0; i < nGenes; i++) {
+            geneList.add(getRandomTerm(knowledgeBase.getKnowledgeBaseVariables().get(outputPos)));
+        }
+        return geneList;
+    }
+
+    private FuzzyTermType getRandomTerm(KnowledgeBaseVariable variable) {
+        Integer termListSize = variable.getTerms().size();
+        Integer termPos = (int) (Math.random() * termListSize);
+        return (FuzzyTermType) (variable.getTerms().get(termPos));
+    }
+
 
 
     // MAIN LOOP //
 
     private List<Chromosome> nextGeneration(List<Chromosome> population, Data<RegressionInstance> data, KnowledgeBaseType knowledgeBase, MethodConfig methodConfig) {
-        List<ImmutablePair<Chromosome, Chromosome>> parentList = getParentList(population, data, knowledgeBase, methodConfig);
+        List<ImmutablePair<Chromosome, Chromosome>> parentList = getParentList(population);
         List<Chromosome> offspringList = getOffspring(parentList, data, knowledgeBase, methodConfig);
-        List<Chromosome> nextGeneration = combineGenerations(population, offspringList, data, knowledgeBase, methodConfig);
+        List<Chromosome> nextGeneration = combineGenerations(population, offspringList);
         if (MUTATION_PROB > 0) {
             nextGeneration = mutate(nextGeneration, data, knowledgeBase, methodConfig);
         }
         return nextGeneration;
     }
 
-    private List<Chromosome> mutate(List<Chromosome> nextGeneration, Data<RegressionInstance> data, KnowledgeBaseType knowledgeBase, MethodConfig methodConfig) {
-        int muNext = (int) Math.ceil(Math.log(Math.random()) / Math.log(1.0 - MUTATION_PROB));
-        int nGenes = nextGeneration.get(0).getGeneList().size();
-        int allPositions = POPULATION_SIZE * nGenes;
-        while (muNext < allPositions) {
-            int chromosomeIndex = muNext / nGenes;
-            int geneIndex = muNext % nGenes;
-            List<FuzzyTermType> outputTermList = (List<FuzzyTermType>) knowledgeBase.getKnowledgeBaseVariables().stream()
-                    .filter(KnowledgeBaseVariable::isOutput)
-                    .findFirst().get()
-                    .getTerms();
-            List<Optional<FuzzyTermType>> geneList = mutateChromosome(nextGeneration.get(chromosomeIndex), geneIndex, outputTermList);
-            Chromosome newChromosome = new Chromosome(geneList, null);
-            Float fitness = (float) evaluator.evaluate(data, decodeChromosome(newChromosome, knowledgeBase), knowledgeBase, methodConfig);
-            newChromosome.setFitness(fitness);
-            nextGeneration.set(chromosomeIndex, newChromosome);
-            muNext += (int) Math.ceil(Math.log(Math.random()) / Math.log(1.0 - MUTATION_PROB));
-        }
-        return nextGeneration;
-    }
-
-    private List<Optional<FuzzyTermType>> mutateChromosome(Chromosome chromosome, int geneIndex, List<FuzzyTermType> outputTermList) {
-        Optional<FuzzyTermType> oldGene = chromosome.getGeneList().get(geneIndex);
-        Integer newGenePos = null;
-
-        if (oldGene.isEmpty()) {
-            newGenePos = (int) Math.random() * (outputTermList.size());
-        } else {
-            Integer termPos = IntStream.range(0, outputTermList.size()).boxed()
-                    .filter(i -> outputTermList.get(i).getName().equals(oldGene.get().getName()))
-                    .findFirst().get();
-            if (termPos == 0) {
-                newGenePos = 1;
-            } else if (termPos == outputTermList.size() - 1) {
-                newGenePos = outputTermList.size() - 2;
-            } else if (Math.random() < 0.5) {
-                newGenePos = termPos - 1;
-            } else {
-                newGenePos = termPos + 1;
-            }
-        }
-        Optional<FuzzyTermType> newGene = Optional.ofNullable(outputTermList.get(newGenePos));
-        List<Optional<FuzzyTermType>> geneList = chromosome.getGeneList();
-        geneList.set(geneIndex, newGene);
-        return geneList;
-    }
-
-    private List<ImmutablePair<Chromosome, Chromosome>> getParentList(List<Chromosome> population, Data<RegressionInstance> data, KnowledgeBaseType knowledgeBase, MethodConfig methodConfig) {
+    private List<ImmutablePair<Chromosome, Chromosome>> getParentList(List<Chromosome> population) {
         List<Float> fitnessList = population.stream()
                 .map(Chromosome::getFitness)
                 .collect(Collectors.toList());
@@ -147,12 +126,18 @@ public class Thrift extends RegressionTrainer {
         return pickParentPositionAux(random, i + 1, accumSum + remainingFitnessList.get(0), remainingFitnessList.subList(1, remainingFitnessList.size()), totalProb);
     }
 
-    private List<Chromosome> getOffspring(List<ImmutablePair<Chromosome, Chromosome>> parentList, Data<RegressionInstance> data, KnowledgeBaseType knowledgeBase, MethodConfig methodConfig) {
+    private List<Chromosome> getOffspring(
+            List<ImmutablePair<Chromosome, Chromosome>> parentList,
+            Data<RegressionInstance> data,
+            KnowledgeBaseType knowledgeBase,
+            MethodConfig methodConfig
+    ) {
         List<Chromosome> offspringList = new ArrayList<>();
         for (ImmutablePair<Chromosome, Chromosome> parentPair : parentList) {
-            Chromosome parent1 = parentPair.getLeft();
-            Chromosome parent2 = parentPair.getRight();
-            ImmutablePair<List<Optional<FuzzyTermType>>, List<Optional<FuzzyTermType>>> offspring = Utils.twoPointCrossover(parent1.getGeneList(), parent2.getGeneList());
+            ImmutablePair<List<Optional<FuzzyTermType>>, List<Optional<FuzzyTermType>>> offspring = Utils.twoPointCrossover(
+                    parentPair.getLeft().getGeneList(),
+                    parentPair.getRight().getGeneList()
+            );
 
             Chromosome child1 = new Chromosome(
                     offspring.getLeft(),
@@ -172,7 +157,7 @@ public class Thrift extends RegressionTrainer {
         return offspringList;
     }
 
-    private List<Chromosome> combineGenerations(List<Chromosome> population, List<Chromosome> offspringList, Data<RegressionInstance> data, KnowledgeBaseType knowledgeBase, MethodConfig methodConfig) {
+    private List<Chromosome> combineGenerations(List<Chromosome> population, List<Chromosome> offspringList) {
         List<Chromosome> nextGeneration = new ArrayList<>();
         nextGeneration.addAll(population);
         nextGeneration.addAll(offspringList);
@@ -184,15 +169,64 @@ public class Thrift extends RegressionTrainer {
                 .subList(0, POPULATION_SIZE);
     }
 
+    private List<Chromosome> mutate(List<Chromosome> nextGeneration, Data<RegressionInstance> data, KnowledgeBaseType knowledgeBase, MethodConfig methodConfig) {
+
+        int muNext = (int) Math.ceil(Math.log(Math.random()) / Math.log(1.0 - MUTATION_PROB));
+        int nGenes = nextGeneration.get(0).getGeneList().size();
+        int allPositions = POPULATION_SIZE * nGenes;
+
+        while (muNext < allPositions) {
+            int chromosomeIndex = muNext / nGenes;
+            int geneIndex = muNext % nGenes;
+            List<FuzzyTermType> outputTermList = (List<FuzzyTermType>) knowledgeBase.getKnowledgeBaseVariables().stream()
+                    .filter(KnowledgeBaseVariable::isOutput)
+                    .findFirst().get()
+                    .getTerms();
+            List<Optional<FuzzyTermType>> geneList = mutateChromosome(nextGeneration.get(chromosomeIndex), geneIndex, outputTermList);
+            Chromosome newChromosome = new Chromosome(geneList, null);
+            Float fitness = (float) evaluator.evaluate(data, decodeChromosome(newChromosome, knowledgeBase), knowledgeBase, methodConfig);
+            newChromosome.setFitness(fitness);
+            nextGeneration.set(chromosomeIndex, newChromosome);
+            muNext += (int) Math.ceil(Math.log(Math.random()) / Math.log(1.0 - MUTATION_PROB));
+        }
+        return nextGeneration;
+    }
+
+    private List<Optional<FuzzyTermType>> mutateChromosome(Chromosome chromosome, int geneIndex, List<FuzzyTermType> outputTermList) {
+        Optional<FuzzyTermType> oldGene = chromosome.getGeneList().get(geneIndex);
+        Integer newGenePos = null;
+
+        if (oldGene.isEmpty()) {
+            newGenePos = (int) (Math.random() * (outputTermList.size()));
+        } else {
+            Integer termPos = IntStream.range(0, outputTermList.size()).boxed()
+                    .filter(i -> outputTermList.get(i).getName().equals(oldGene.get().getName()))
+                    .findFirst().get();
+            if (termPos == 0) {
+                newGenePos = 1;
+            } else if (termPos == outputTermList.size() - 1) {
+                newGenePos = outputTermList.size() - 2;
+            } else if (Math.random() < 0.5) {
+                newGenePos = termPos - 1;
+            } else {
+                newGenePos = termPos + 1;
+            }
+        }
+        Optional<FuzzyTermType> newGene = Optional.ofNullable(outputTermList.get(newGenePos));
+        List<Optional<FuzzyTermType>> geneList = chromosome.getGeneList();
+        geneList.set(geneIndex, newGene);
+        return geneList;
+    }
 
 
-    // AFTER MAIN LOOP //
+
+    // AUXILIARY FUNCTIONS //
 
     private List<List<FuzzyTermType>> decodeChromosome(Chromosome chromosome, KnowledgeBaseType knowledgeBase) {
         List<List<Integer>> auxList = getAuxList(knowledgeBase);
         List<List<FuzzyTermType>> termList = new ArrayList<>();
         for (int i = 0; i < auxList.size(); i++) {
-            termList.add(decodeRule(auxList.get(i), chromosome.getGeneList().get(i).get(), knowledgeBase)); // TODO - !?
+            termList.add(decodeRule(auxList.get(i), chromosome.getGeneList().get(i).get(), knowledgeBase));
         }
         return termList;
     }
@@ -206,7 +240,8 @@ public class Thrift extends RegressionTrainer {
     }
 
     private List<List<Integer>> getAuxList(KnowledgeBaseType knowledgeBase) {
-        List<Integer> first = new ArrayList<>((int) knowledgeBase.getKnowledgeBaseVariables().stream().filter(KnowledgeBaseVariable::isInput).count());
+        Integer antecedentSize = (int) knowledgeBase.getKnowledgeBaseVariables().stream().filter(KnowledgeBaseVariable::isInput).count();
+        List<Integer> first = new ArrayList<>(antecedentSize);
         Collections.fill(first, 0);
         return getAuxListAux(Collections.singletonList(first), knowledgeBase);
     }
@@ -249,30 +284,5 @@ public class Thrift extends RegressionTrainer {
 
     private boolean isLastTerm(Integer termIndex, Integer varIndex, KnowledgeBaseType knowledgeBase) {
         return knowledgeBase.getKnowledgeBaseVariables().get(varIndex).getTerms().size() == (termIndex + 1);
-    }
-
-    private Integer getNGenes(KnowledgeBaseType knowledgeBase) {
-        return knowledgeBase.getKnowledgeBaseVariables().stream()
-                .filter(KnowledgeBaseVariable::isInput)
-                .map(var -> var.getTerms().size())
-                .reduce((x, y) -> x * y)
-                .get();
-    }
-
-    private List<FuzzyTermType> getRandomGeneList(Integer nGenes, KnowledgeBaseType knowledgeBase, MethodConfig methodConfig) {
-        List<FuzzyTermType> geneList = new ArrayList<>();
-        Integer outputPos = IntStream.range(0, knowledgeBase.getKnowledgeBaseVariables().size()).boxed()
-                .filter(i -> knowledgeBase.getKnowledgeBaseVariables().get(i).isOutput())
-                .findFirst().get();
-        for (int i = 0; i < nGenes; i++) {
-            geneList.add(getRandomTerm(knowledgeBase.getKnowledgeBaseVariables().get(outputPos)));
-        }
-        return geneList;
-    }
-
-    private FuzzyTermType getRandomTerm(KnowledgeBaseVariable variable) {
-        Integer termListSize = variable.getTerms().size();
-        Integer termPos = (int) (Math.random() * termListSize);
-        return (FuzzyTermType) (variable.getTerms().get(termPos));
     }
 }

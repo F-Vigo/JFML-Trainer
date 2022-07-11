@@ -14,10 +14,10 @@ import java.util.List;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Stats {
 
-    int tp; // true positives
-    int tn; // true negatives
-    int fp; // false positives
-    int fn; // false negatives
+    int tp; // True positives
+    int tn; // True negatives
+    int fp; // False positives
+    int fn; // False negatives
 
     public static Stats buildStats(
             List<BinaryIREPInstance> instanceList,

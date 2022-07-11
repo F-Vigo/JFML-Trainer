@@ -2,7 +2,6 @@ package jfmltrainer.trainer.rulebasetrainer;
 
 import jfml.jaxb.FuzzySystemType;
 import jfml.knowledgebase.KnowledgeBaseType;
-import jfml.rulebase.FuzzySystemRuleBase;
 import jfml.rulebase.RuleBaseType;
 import jfmltrainer.data.Data;
 import jfmltrainer.data.instance.Instance;

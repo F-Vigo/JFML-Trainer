@@ -5,7 +5,7 @@ import jfmltrainer.Utils;
 import jfmltrainer.data.Data;
 import jfmltrainer.trainer.MethodConfig;
 import jfmltrainer.trainer.tuning.lateral.Chromosome;
-import jfmltrainer.trainer.tuning.lateral.Evaluator;
+import jfmltrainer.trainer.tuning.lateral.approach.Evaluator;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import java.util.ArrayList;

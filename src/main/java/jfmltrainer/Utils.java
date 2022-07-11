@@ -3,19 +3,33 @@ package jfmltrainer;
 import jfml.knowledgebase.KnowledgeBaseType;
 import jfml.knowledgebase.variable.FuzzyVariableType;
 import jfml.knowledgebase.variable.KnowledgeBaseVariable;
+import jfml.rule.FuzzyRuleType;
 import jfml.rulebase.RuleBaseType;
 import jfml.term.FuzzyTerm;
 import jfml.term.FuzzyTermType;
+import jfmltrainer.data.instance.Instance;
+import jfmltrainer.method.Problem;
+import jfmltrainer.operator.OperatorParser;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class Utils {
+
+    public static Float computeAccuracy(List<List<String>> realValueList, List<List<String>> predictedValueList) {
+        int n = realValueList.size();
+        return IntStream.range(0, n).boxed()
+                .map(i -> realValueList.get(i).equals(predictedValueList.get(i)))
+                .map(equals -> equals ? 1 : 0)
+                .reduce(Integer::sum)
+                .get() / (float) n;
+    }
 
     public interface TriFunction<A,B,C,D> {
         D apply(A a, B b, C c);
@@ -178,6 +192,34 @@ public class Utils {
                     return dif*dif;
                 })
                 .reduce(Float::sum).get() / realValueList.size();
+    }
+
+    public static <T> List<T> predict(Instance<T> instance, RuleBaseType ruleBase) {
+        FuzzyRuleType bestRule = argMax(
+                ruleBase.getRules(),
+                rule -> getMatchingDegree(instance, rule)*rule.getWeight()
+        );
+        if (instance.getProblem().equals(Problem.CLASSIFICATION)) {
+            return bestRule.getConsequent().getThen().getClause().stream()
+                    .map(clause -> (T) ((FuzzyTermType) clause.getTerm()).getName())
+                    .collect(Collectors.toList());
+        }
+        else {
+            return bestRule.getConsequent().getThen().getClause().stream()
+                    .map(clause -> (T) defuzzify((FuzzyTermType) clause.getTerm()))
+                    .collect(Collectors.toList());
+        }
+    }
+
+    private static Float getMatchingDegree(Instance instance, FuzzyRuleType rule) {
+        int antecedentSize = instance.getAntecedentValueList().size();
+        List<Float> mfValueList = IntStream.range(0, antecedentSize).boxed()
+                .map(i -> ((FuzzyTermType) rule.getAntecedent().getClauses().get(i).getTerm()).getMembershipValue((Float) instance.getAntecedentValueList().get(i)))
+                .collect(Collectors.toList());
+
+        return mfValueList.stream()
+                .reduce(OperatorParser.getAndOperator(Optional.ofNullable(rule.getAndMethod()), null)::apply)
+                .get();
     }
 
 }

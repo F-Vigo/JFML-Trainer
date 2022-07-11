@@ -33,7 +33,12 @@ public abstract class CORAbstract extends RegressionTrainer {
 
         protected abstract List<FuzzyRuleType> getCandidateRuleList(Data data, KnowledgeBaseType knowledgeBase);
 
-        private List<FuzzyRuleType> getOptimalRuleList(List<FuzzyRuleType> candidateRuleList, Data<RegressionInstance> data, KnowledgeBaseType knowledgeBase, MethodConfig methodConfig) {
+        private List<FuzzyRuleType> getOptimalRuleList(
+                List<FuzzyRuleType> candidateRuleList,
+                Data<RegressionInstance> data,
+                KnowledgeBaseType knowledgeBase,
+                MethodConfig methodConfig
+        ) {
 
             Map<String, List<FuzzyRuleType>> searchSpacePerSubspace = candidateRuleList.stream()
                     .collect(Collectors.groupingBy(RuleBaseTrainerUtils::getAntecedentClausesAsString));

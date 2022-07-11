@@ -13,6 +13,11 @@ import java.util.stream.IntStream;
 
 public class GlobalApproach extends LateralApproach {
 
+    public GlobalApproach() {
+        super();
+        this.evaluator = new GlobalEvaluator();
+    }
+
     @Override
     public Integer getNGenes(KnowledgeBaseType knowledgeBase, RuleBaseType ruleBase) {
         return knowledgeBase.getKnowledgeBaseVariables().stream()

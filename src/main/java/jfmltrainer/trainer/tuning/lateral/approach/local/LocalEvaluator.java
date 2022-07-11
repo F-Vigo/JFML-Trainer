@@ -1,7 +1,7 @@
 package jfmltrainer.trainer.tuning.lateral.approach.local;
 
 
-import jfmltrainer.trainer.tuning.lateral.Evaluator;
+import jfmltrainer.trainer.tuning.lateral.approach.Evaluator;
 
 public class LocalEvaluator extends Evaluator {
 

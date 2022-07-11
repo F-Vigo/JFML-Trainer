@@ -6,7 +6,6 @@ import jfml.rule.*;
 import jfml.rulebase.RuleBaseType;
 import jfml.term.FuzzyTermType;
 import jfmltrainer.trainer.tuning.lateral.Chromosome;
-import jfmltrainer.trainer.tuning.lateral.Evaluator;
 import lombok.Getter;
 
 import java.util.List;

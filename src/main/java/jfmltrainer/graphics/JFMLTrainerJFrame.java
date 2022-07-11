@@ -8,7 +8,6 @@ import jfmltrainer.graphics.panel.RuleBaseJPanel;
 
 import javax.swing.*;
 import java.awt.event.WindowEvent;
-import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
 class JFMLTrainerJFrame extends JFrame {

@@ -3,6 +3,7 @@ package jfmltrainer.trainer.rulebasetrainer.regression.anfis;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class AnfisUtils {
@@ -17,32 +18,33 @@ public class AnfisUtils {
     public static List<List<Integer>> getCombinationList(List<Integer> nTermList) {
         List<Integer> initialCombination = new ArrayList<>(nTermList.size());
         Collections.fill(initialCombination, 0);
-        return getCombinationListAux(nTermList, Collections.singletonList(initialCombination));
+        List<Integer> finalElem = nTermList.stream().map(x -> x-1).collect(Collectors.toList());
+        return getCombinationListAux(finalElem, Collections.singletonList(initialCombination));
     }
 
-    private static List<List<Integer>> getCombinationListAux(List<Integer> nTermList, List<List<Integer>> accum) {
+    private static List<List<Integer>> getCombinationListAux(List<Integer> finalElem, List<List<Integer>> accum) {
         List<Integer> last = accum.get(accum.size()-1);
-        if (last.equals(nTermList)) {
+        if (last.equals(finalElem)) {
             return accum;
         } else {
-            accum.add(nextItem(nTermList, last));
-            return getCombinationListAux(nTermList, accum);
+            accum.add(nextItem(finalElem, last));
+            return getCombinationListAux(finalElem, accum);
         }
     }
 
-    private static List<Integer> nextItem(List<Integer> nTermList, List<Integer> last) {
-        return nextItemAux(nTermList, last, nTermList.size()-1);
+    private static List<Integer> nextItem(List<Integer> finalElem, List<Integer> last) {
+        return nextItemAux(finalElem, last, finalElem.size()-1);
     }
 
-    private static List<Integer> nextItemAux(List<Integer> nTermList, List<Integer> last, int k) {
-        if (last.get(k) == nTermList.get(k)-1) {
+    private static List<Integer> nextItemAux(List<Integer> finalElem, List<Integer> last, int k) {
+        if (last.get(k) == finalElem.get(k)) {
             List<Integer> newItem = new ArrayList<>();
             for (int i = 0; i < k; i++) newItem.add(last.get(i));
             newItem.add(last.get(k)+1);
-            for (int i = k+1; i < nTermList.size(); i++) newItem.add(0);
+            for (int i = k+1; i < finalElem.size(); i++) newItem.add(0);
             return newItem;
         } else {
-            return nextItemAux(nTermList, last, k-1);
+            return nextItemAux(finalElem, last, k-1);
         }
     }
 }

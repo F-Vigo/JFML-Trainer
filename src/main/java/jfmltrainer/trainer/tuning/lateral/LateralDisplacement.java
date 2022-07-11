@@ -26,16 +26,15 @@ public abstract class LateralDisplacement extends Tuner {
     protected LateralSelectionVariant lateralSelectionVariant;
 
     public ImmutablePair<KnowledgeBaseType, RuleBaseType> tune(Data data, KnowledgeBaseType knowledgeBase, RuleBaseType ruleBase, MethodConfig methodConfig) {
-        Chromosome chromosome = CHC(data, knowledgeBase, ruleBase, POPULATION_SIZE, methodConfig, lateralApproach.getNGenes(knowledgeBase, ruleBase));
+        Chromosome chromosome = CHC(data, ruleBase, POPULATION_SIZE, methodConfig, lateralApproach.getNGenes(knowledgeBase, ruleBase));
         return buildApproximativeKnowledgeAndRuleBases(knowledgeBase, ruleBase, chromosome);
     }
 
-    protected Chromosome CHC(Data data, KnowledgeBaseType knowledgeBase, RuleBaseType ruleBase, Integer populationSize, MethodConfig methodConfig, int nGenes) {
+    private Chromosome CHC(Data data, RuleBaseType ruleBase, Integer populationSize, MethodConfig methodConfig, int nGenes) {
 
         Function<Chromosome, Float> evaluation = chromosome -> (float) lateralApproach.getEvaluator().evaluate(data, ruleBase, chromosome, methodConfig);
 
         Integer nRules = ruleBase.getRules().size();
-
         List<Boolean> isSelectedList = new ArrayList<>(ruleBase.getRules().size());
         Collections.fill(isSelectedList, true);
         
@@ -45,7 +44,6 @@ public abstract class LateralDisplacement extends Tuner {
         );
 
         Float L = (float) (nGenes * BITSGENE / 4);
-
         Boolean keepLooping = true;
         Integer i = 0;
         Chromosome bestSoFar = Utils.argMax(
@@ -55,7 +53,7 @@ public abstract class LateralDisplacement extends Tuner {
         while(keepLooping) {
 
             i++;
-            populationAndNewIndividuals = nextGenerationAndNewIndividuals(data, knowledgeBase, ruleBase, methodConfig, populationAndNewIndividuals.getLeft(), L, populationSize);
+            populationAndNewIndividuals = nextGenerationAndNewIndividuals(data, ruleBase, methodConfig, populationAndNewIndividuals.getLeft(), L, populationSize);
 
             if(evaluation.apply(populationAndNewIndividuals.getLeft().get(0)) < evaluation.apply(bestSoFar)) {
                 L--;
@@ -68,6 +66,10 @@ public abstract class LateralDisplacement extends Tuner {
                         restartPopulation(populationAndNewIndividuals.getLeft().get(0), populationSize, nRules),
                         false
                 );
+                bestSoFar = Utils.argMax(
+                        populationAndNewIndividuals.getLeft(),
+                        evaluation::apply
+                );
             }
             if (i.equals(MAX_ITER)) {
                 keepLooping = false;
@@ -76,9 +78,14 @@ public abstract class LateralDisplacement extends Tuner {
         return bestSoFar;
     }
 
-
-
-    private ImmutablePair<List<Chromosome>, Boolean> nextGenerationAndNewIndividuals(Data data, KnowledgeBaseType knowledgeBase, RuleBaseType ruleBase, MethodConfig methodConfig, List<Chromosome> population, Float L, Integer populationSize) {
+    private ImmutablePair<List<Chromosome>, Boolean> nextGenerationAndNewIndividuals(
+            Data data,
+            RuleBaseType ruleBase,
+            MethodConfig methodConfig,
+            List<Chromosome> population,
+            Float L,
+            Integer populationSize
+    ) {
         Collections.shuffle(population);
         List<ImmutablePair<Chromosome, Chromosome>> parentCandidateList = selectParentCandidates(population);
         List<Chromosome> offspringList = breedOffspring(parentCandidateList, L, data, ruleBase, methodConfig);
@@ -130,8 +137,7 @@ public abstract class LateralDisplacement extends Tuner {
     private Optional<ImmutablePair<Chromosome, Chromosome>> breedChildren(Chromosome parent1, Chromosome parent2, Float L, Data data, RuleBaseType ruleBase, MethodConfig methodConfig) {;
         List<Character> parent1Char = grayCoder.toGrayCode(parent1);
         List<Character> parent2Char = grayCoder.toGrayCode(parent2);
-        Integer hammingDistance = IntStream.range(0, parent1.getGeneList().size())
-                .boxed()
+        Integer hammingDistance = IntStream.range(0, parent1.getGeneList().size()).boxed()
                 .map(i -> parent1Char.get(i) == parent2Char.get(i))
                 .map(equals -> equals ? 0 : 1)
                 .reduce(Integer::sum).get();
@@ -140,11 +146,11 @@ public abstract class LateralDisplacement extends Tuner {
                 : Optional.empty();
     }
 
-    protected List<ImmutablePair<Chromosome, Chromosome>> selectParentCandidates(List<Chromosome> population) {
+    private List<ImmutablePair<Chromosome, Chromosome>> selectParentCandidates(List<Chromosome> population) {
         List<Integer> shuffledPositions = IntStream.range(0, population.size()).boxed().collect(Collectors.toList());
         Collections.shuffle(shuffledPositions);
         List<ImmutablePair<Chromosome, Chromosome>> parentCandidateList = new ArrayList<>();
-        for (int i = 0; i < population.size()/2; i++) {
+        for (int i = 0; i < population.size(); i+=2) {
             parentCandidateList.add(new ImmutablePair<>(
                     population.get(i),
                     population.get(i+1)
@@ -153,7 +159,7 @@ public abstract class LateralDisplacement extends Tuner {
         return parentCandidateList;
     }
 
-    protected List<Chromosome> restartPopulation(Chromosome initialChromosome, Integer populationSize, Integer nRules) {
+    private List<Chromosome> restartPopulation(Chromosome initialChromosome, Integer populationSize, Integer nRules) {
         Integer nGenes = initialChromosome.getGeneList().size();
         List<Chromosome> population = new ArrayList<>();
         population.add(initialChromosome);
@@ -188,13 +194,4 @@ public abstract class LateralDisplacement extends Tuner {
         KnowledgeBaseType newKnowledgeBase = Utils.buildApproximativeKnowledgeBase(oldKnowledgeBase, newRuleBase);
         return new ImmutablePair<>(newKnowledgeBase, newRuleBase);
     }
-
-
-
-
-
-
-
-
-
 }

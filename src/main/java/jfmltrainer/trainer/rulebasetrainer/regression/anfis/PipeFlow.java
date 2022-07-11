@@ -2,8 +2,6 @@ package jfmltrainer.trainer.rulebasetrainer.regression.anfis;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import lombok.Value;
 import lombok.experimental.FieldDefaults;
 
 import java.util.function.Function;

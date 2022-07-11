@@ -3,6 +3,7 @@ package jfmltrainer.trainer.rulebasetrainer.classification.furia.irep;
 import jfml.knowledgebase.KnowledgeBaseType;
 import jfmltrainer.data.instance.ClassificationInstance;
 import jfmltrainer.trainer.rulebasetrainer.classification.furia.irep.rule.CrispClause;
+import jfmltrainer.trainer.rulebasetrainer.classification.furia.irep.rule.CrispClauseCateg;
 import jfmltrainer.trainer.rulebasetrainer.classification.furia.irep.rule.CrispRule;
 
 import java.util.ArrayList;
@@ -27,7 +28,7 @@ public class IREPUtils {
 
     public static List<BinaryIREPInstance> getUncoveredInstanceListByRule(List<BinaryIREPInstance> instanceList, CrispRule rule, KnowledgeBaseType knowledgeBase) {
         return instanceList.stream()
-                .filter(instance -> !covers(rule, instance.getInstance(), knowledgeBase)) // TODO
+                .filter(instance -> !covers(rule, instance.getInstance(), knowledgeBase))
                 .collect(Collectors.toList());
     }
 
@@ -43,7 +44,7 @@ public class IREPUtils {
                     .filter(pos -> knowledgeBase.getKnowledgeBaseVariables().get(pos).getName() == varName)
                     .findAny()
                     .get();
-            Boolean coversAttribute = coversAttribute(crispRule.getAntecedent().get(i), instance.getAntecedentValueList().get(i));
+            Boolean coversAttribute = coversAttribute(crispRule.getAntecedent().get(i), instance.getAntecedentValueList().get(varPosition));
             if (coversAttribute) {
                 i++;
                 if (i == crispRule.getAntecedent().size()) {
@@ -54,18 +55,13 @@ public class IREPUtils {
                 keepLooping = false;
             }
         }
-        Boolean coversConsequent = Objects.equals(crispRule.getConsequent(), instance.getConsequentValueList().get(0)); // TODO
+        Boolean coversConsequent = Objects.equals(crispRule.getConsequent(), instance.getConsequentValueList().get(0));
         return soFarSoGood && coversConsequent;
     }
 
     private static boolean coversAttribute(CrispClause crispClause, Float value) {
-        switch (crispClause.getType()) {
-            case LESS_OR_EQUAL:
-                return value <= crispClause.getValue();
-            case GREATER:
-                return value > crispClause.getValue();
-            default: // This should never be reached
-                return false;
-        }
+        return crispClause.getType().equals(CrispClauseCateg.LESS_OR_EQUAL)
+                ? value <= crispClause.getValue()
+                : value >= crispClause.getValue();
     }
 }

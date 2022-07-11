@@ -25,7 +25,7 @@ public class SimulatedAnnealing {
             Function<T,Predicate<T>> neighbourFilter,
             Function<T, Float> functionToMinimize,
             T initialSolution
-            ) {
+    ) {
 
         ImmutablePair<ImmutablePair<T, Float>, Boolean> currentBestSolutionAndTargetValueAndKeepLooping = new ImmutablePair<>(
                 new ImmutablePair<>(initialSolution, functionToMinimize.apply(initialSolution)),
@@ -49,7 +49,13 @@ public class SimulatedAnnealing {
         return currentBestSolutionAndTargetValueAndKeepLooping.getLeft().getLeft();
     }
 
-    private static <T> ImmutablePair<ImmutablePair<T, Float>, Boolean> runCoolingIteration(List<T> searchSpace, Function<T, Predicate<T>> neighbourFilter, Function<T, Float> functionToMinimize, ImmutablePair<T, Float> initialBestSolutionAndTargetValue, Float temperature) {
+    private static <T> ImmutablePair<ImmutablePair<T, Float>, Boolean> runCoolingIteration(
+            List<T> searchSpace,
+            Function<T, Predicate<T>> neighbourFilter,
+            Function<T, Float> functionToMinimize,
+            ImmutablePair<T, Float> initialBestSolutionAndTargetValue,
+            Float temperature
+    ) {
         ImmutablePair<T, Float> currentBestSolutionAndTargetValue = initialBestSolutionAndTargetValue;
         Integer nHits = 0;
         Boolean keepLooping = true;
@@ -68,7 +74,6 @@ public class SimulatedAnnealing {
 
             if (nHits >= MAX_HITS || i >= MAX_NEIGHBOURS) {
                 keepLooping = false;
-                // Return _
             }
         }
         return new ImmutablePair<>(currentBestSolutionAndTargetValue, nHits == 0);
@@ -79,15 +84,15 @@ public class SimulatedAnnealing {
     }
 
     private static Boolean isNeighbourAccepted(Float targetValueIncrement, Float temperature) { // Metropolis criterium
-        return targetValueIncrement < 0 || Math.random() < Math.exp(-targetValueIncrement)/temperature;
+        return targetValueIncrement < 0 || Math.random() < Math.exp(-targetValueIncrement/temperature);
     }
 
     private static <T> T getNewSolution(T currentSolution, List<T> searchSpace, Function<T, Predicate<T>> neighbourFilter) {
-        List<T> neighborList = searchSpace.stream()
+        List<T> neighbourList = searchSpace.stream()
                 .filter(neighbourFilter.apply(currentSolution))
                 .collect(Collectors.toList());
-        Collections.shuffle(neighborList);
-        return Optional.ofNullable(neighborList.get(0))
-                .orElseGet(() -> currentSolution);
+        Collections.shuffle(neighbourList);
+        return Optional.ofNullable(neighbourList.get(0))
+                .orElse(currentSolution);
     }
 }

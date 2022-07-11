@@ -2,7 +2,6 @@ package jfmltrainer.graphics;
 
 import jfml.knowledgebase.KnowledgeBaseType;
 import jfml.rulebase.RuleBaseType;
-import jfmltrainer.graphics.panel.JFMLTrainerJPanel;
 
 public class JFMLTrainerGraphics {
 

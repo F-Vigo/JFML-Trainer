@@ -27,7 +27,7 @@ public class ChiWMBasedTest {
         assertFirstRulePresent(ruleBase);
         assertSecondRulePresent(ruleBase);
 
-        JFMLTrainerGraphics.drawAndSaveImage(knowledgeBase, ruleBase);
+        JFMLTrainerGraphics.drawAndSaveImage(knowledgeBase, ruleBase); // TODO - Remove
     }
 
 

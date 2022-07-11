@@ -22,25 +22,26 @@ public class CordonHerreraUtils {
         return candidateRuleList;
     }
 
+
     private static List<FuzzyRuleType> generateAllPossibleRuleList(KnowledgeBaseType knowledgeBase) {
         return getAllFuzzyTermCombinations(knowledgeBase.getKnowledgeBaseVariables(), Collections.emptyList()).stream()
                 .map(termList -> RuleBaseTrainerUtils.buildRuleFromTermList(termList, knowledgeBase))
                 .collect(Collectors.toList());
     }
 
-    private static List<List<FuzzyTermType>> getAllFuzzyTermCombinations(List<KnowledgeBaseVariable> variablesLeftList, List<List<FuzzyTermType>> acum) {
+    private static List<List<FuzzyTermType>> getAllFuzzyTermCombinations(List<KnowledgeBaseVariable> variablesLeftList, List<List<FuzzyTermType>> accum) {
 
         if (variablesLeftList.isEmpty()) {
-            return acum;
+            return accum;
         }
 
-        List<List<FuzzyTermType>> newAcum;
-        if (acum.isEmpty()) {
-            newAcum = variablesLeftList.get(0).getTerms().stream()
+        List<List<FuzzyTermType>> newAccum;
+        if (accum.isEmpty()) {
+            newAccum = variablesLeftList.get(0).getTerms().stream()
                     .map(term -> Collections.singletonList((FuzzyTermType) term))
                     .collect(Collectors.toList());
         } else {
-            newAcum = acum.stream()
+            newAccum = accum.stream()
                     .map(termList -> enrichWithAllPossibleNewTerms(termList, variablesLeftList.get(0)))
                     .reduce((x,y) -> {
                         List<List<FuzzyTermType>> result = new ArrayList<>(x);
@@ -49,7 +50,7 @@ public class CordonHerreraUtils {
                     })
                     .get();
         }
-        return getAllFuzzyTermCombinations(variablesLeftList.subList(1, variablesLeftList.size()), newAcum);
+        return getAllFuzzyTermCombinations(variablesLeftList.subList(1, variablesLeftList.size()), newAccum);
     }
 
     private static List<List<FuzzyTermType>> enrichWithAllPossibleNewTerms(List<FuzzyTermType> termList, KnowledgeBaseVariable knowledgeBaseVariable) {
@@ -65,11 +66,11 @@ public class CordonHerreraUtils {
     private static List<ImmutablePair<List<Instance>, FuzzyRuleType>> filterCandidateRules(List<FuzzyRuleType> allPossibleRuleList, Data data, KnowledgeBaseType knowledgeBase) {
         return allPossibleRuleList.stream()
                 .map(rule -> new ImmutablePair<>(RuleBaseTrainerUtils.getCoveredInstances(rule, data, knowledgeBase), rule))
-                .filter(CordonHerreraUtils::ruleCoverInstances)
+                .filter(CordonHerreraUtils::actuallyCoversInstances)
                 .collect(Collectors.toList());
     }
 
-    private static Boolean ruleCoverInstances(ImmutablePair<List<Instance>, FuzzyRuleType> instanceListAndRule) {
+    private static Boolean actuallyCoversInstances(ImmutablePair<List<Instance>, FuzzyRuleType> instanceListAndRule) {
         return !instanceListAndRule.getLeft().isEmpty();
     }
 

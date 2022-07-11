@@ -1,4 +1,4 @@
-package jfmltrainer.trainer.tuning.lateral;
+package jfmltrainer.trainer.tuning.lateral.approach;
 
 import jfml.rule.FuzzyRuleType;
 import jfml.rulebase.RuleBaseType;
@@ -8,6 +8,7 @@ import jfmltrainer.data.Data;
 import jfmltrainer.data.instance.RegressionInstance;
 import jfmltrainer.operator.and.AndOperator;
 import jfmltrainer.trainer.MethodConfig;
+import jfmltrainer.trainer.tuning.lateral.Chromosome;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -40,7 +41,7 @@ public abstract class Evaluator {
                 IntStream.range(0,actualRuleList.size()).boxed().collect(Collectors.toList()),
                 i -> chromosome.getSelectedRuleList().get(i) ? getMatchingDegree(instance, i, ruleBase, chromosome, methodConfig) : -1
         );
-        return this.defuzzify(bestRulePos, ruleBase, chromosome);
+        return defuzzify(bestRulePos, ruleBase, chromosome);
     }
 
     private Float getMatchingDegree(RegressionInstance instance, Integer rulePos, RuleBaseType ruleBase, Chromosome chromosome, MethodConfig methodConfig) {
@@ -58,7 +59,7 @@ public abstract class Evaluator {
         Integer nVar = instance.getAntecedentValueList().size() + instance.getConsequentValueList().size();
         Float instanceValue = instance.getAntecedentValueList().get(antecedentVarPos);
         FuzzyTermType term = (FuzzyTermType) ruleBase.getRules().get(rulePos).getAntecedent().getClauses().get(antecedentVarPos).getTerm();
-        Float displacement = chromosome.getGeneList().get(getInputGenePosition(nVar, null, antecedentVarPos));
+        Float displacement = chromosome.getGeneList().get(getInputGenePosition(nVar, rulePos, antecedentVarPos));
         return term.getMembershipValue(instanceValue-displacement);
     }
 

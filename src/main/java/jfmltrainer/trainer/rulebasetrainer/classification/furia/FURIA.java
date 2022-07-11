@@ -24,6 +24,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -86,7 +87,8 @@ public class FURIA extends ClassificationTrainer {
         accum.add(bestSoFar);
         FuriaClauseAndPurity finalBestSoFar = bestSoFar;
         List<CrispClause> newAvailableNumericAntecedentList = availableNumericAntecedentList.stream()
-                .filter(antecedent -> antecedent.getVarName().equals(finalBestSoFar.getVarName())) // TODO !?
+                .filter(antecedent -> !antecedent.getVarName().equals(finalBestSoFar.getVarName())
+                        || finalBestSoFar.getTrapezoid().getMembershipValue(antecedent.getValue()) > 0)
                 .collect(Collectors.toList());
 
         return fuzzyRuleAux(
@@ -125,9 +127,6 @@ public class FURIA extends ClassificationTrainer {
             KnowledgeBaseType knowledgeBase,
             String className
     ) {
-        Trapezoid bestTrapezoidSoFar = null;
-        Float bestPuritySoFar = Float.MIN_VALUE;
-
         Integer varPosition = IntStream.range(0, knowledgeBase.getKnowledgeBaseVariables().size())
                 .boxed()
                 .filter(i -> knowledgeBase.getKnowledgeBaseVariables().get(i).getName().equals(crispClause.getVarName()))
@@ -136,44 +135,66 @@ public class FURIA extends ClassificationTrainer {
         List<Float> attributeValues = instanceList.stream()
                 .map(instance -> instance.getAntecedentValueList().get(varPosition))
                 .collect(Collectors.toList());
+        ImmutablePair<Trapezoid, Float> bestTrapezoidAndPurity = getBestTrapezoidAndPurity(crispClause, attributeValues, instanceList, className);
 
-        if (crispClause.getType().equals(CrispClauseCateg.LESS_OR_EQUAL)) { // TODO - ELSE!!!
-            Optional<Float> coreR = Optional.of(crispClause.getValue());
-            List<Float> candidateSupportList = attributeValues.stream()
-                    .filter(value -> value >= crispClause.getValue())
-                    .collect(Collectors.toList());
-            for (Float candidateSupport : candidateSupportList) {
-                Optional<Float> newSupportR = Optional.of(candidateSupport);
-                Trapezoid newTrapezoid = new Trapezoid(Optional.empty(), Optional.empty(), coreR, newSupportR);
-                Float newPurity = computePurity(newTrapezoid, instanceList, className, attributeValues);
+        return new FuriaClauseAndPurity(crispClause.getVarName(), bestTrapezoidAndPurity.getLeft(), bestTrapezoidAndPurity.getRight());
+    }
 
-                if (newPurity > bestPuritySoFar) { // TODO - In case of draw...
+    private ImmutablePair<Trapezoid, Float> getBestTrapezoidAndPurity(CrispClause crispClause, List<Float> attributeValues, List<ClassificationInstance> instanceList, String className) {
+
+        Trapezoid bestTrapezoidSoFar = null;
+        Float bestPuritySoFar = Float.MIN_VALUE;
+
+        Boolean isLessOrEqual = crispClause.getType().equals(CrispClauseCateg.LESS_OR_EQUAL);
+
+        Optional<Float> coreExtreme = Optional.of(crispClause.getValue());
+        Predicate<Float> filter = isLessOrEqual
+                ? value -> crispClause.getValue() <= value
+                : value -> value <= crispClause.getValue();
+        List<Float> candidateSupportList = attributeValues.stream()
+                .filter(filter)
+                .collect(Collectors.toList());
+
+        for (Float candidateSupport : candidateSupportList) {
+
+            Trapezoid newTrapezoid = isLessOrEqual
+                    ? new Trapezoid(Optional.empty(), Optional.empty(), coreExtreme, Optional.of(candidateSupport))
+                    : new Trapezoid(Optional.of(candidateSupport), coreExtreme, Optional.empty(), Optional.empty());
+            Float newPurity = computePurity(newTrapezoid, instanceList, className, attributeValues);
+
+            if (newPurity > bestPuritySoFar) {
+                bestPuritySoFar = newPurity;
+                bestTrapezoidSoFar = newTrapezoid;
+            } else if (newPurity == bestPuritySoFar) {
+                Boolean isWider = isLessOrEqual
+                        ? candidateSupport > bestTrapezoidSoFar.getSupportR().get()
+                        : candidateSupport < bestTrapezoidSoFar.getSupportL().get();
+                if (isWider) {
                     bestPuritySoFar = newPurity;
                     bestTrapezoidSoFar = newTrapezoid;
                 }
             }
         }
-        return new FuriaClauseAndPurity(crispClause.getVarName(), bestTrapezoidSoFar, bestPuritySoFar);
+        return new ImmutablePair<>(bestTrapezoidSoFar, bestPuritySoFar);
     }
-
 
 
     // EVALUATOR //
 
-    private Float computePurity(Trapezoid newTrapezoid, List<ClassificationInstance> instanceList, String className, List<Float> attributeValues) {
+    private Float computePurity(Trapezoid trapezoid, List<ClassificationInstance> instanceList, String className, List<Float> attributeValues) {
         List<Float> positiveList = new ArrayList<>();
         List<Float> negativeList = new ArrayList<>();
         IntStream.range(0, instanceList.size()).boxed()
                 .forEach(i -> {
-                    if (instanceList.get(i).getConsequentValueList().get(0).equals(className)) { // TODO - Check
+                    if (instanceList.get(i).getConsequentValueList().get(0).equals(className)) {
                         positiveList.add(attributeValues.get(i));
                     } else {
                         negativeList.add(attributeValues.get(i));
                     }
                 });
 
-        Float p = positiveList.stream().map(newTrapezoid::getMembershipValue).reduce(Float::sum).get();
-        Float n = negativeList.stream().map(newTrapezoid::getMembershipValue).reduce(Float::sum).get();
+        Float p = positiveList.stream().map(trapezoid::getMembershipValue).reduce(Float::sum).get();
+        Float n = negativeList.stream().map(trapezoid::getMembershipValue).reduce(Float::sum).get();
 
         return p / (p+n);
     }
@@ -207,7 +228,7 @@ public class FURIA extends ClassificationTrainer {
         List<Float> varValues = instanceList.stream().map(instance -> instance.getAntecedentValueList().get(varIndex)).collect(Collectors.toList());
         Float min = varValues.stream().min(Float::compareTo).get();
         Float max = varValues.stream().max(Float::compareTo).get();
-        return protoClause.getTrapezoid().getCoreL().isEmpty() // <=
+        return protoClause.getTrapezoid().getCoreL().isEmpty() // If original rule was of <= type.
                 ? new float[]{min, min, protoClause.getTrapezoid().getCoreR().get(), protoClause.getTrapezoid().getSupportR().get()}
                 : new float[]{protoClause.getTrapezoid().getCoreR().get(), protoClause.getTrapezoid().getSupportR().get(), max, max};
     }

@@ -6,12 +6,18 @@ import jfml.rulebase.RuleBaseType;
 import jfmltrainer.trainer.rulebasetrainer.RuleBaseTrainerUtils;
 import jfmltrainer.trainer.tuning.lateral.Chromosome;
 import jfmltrainer.trainer.tuning.lateral.approach.LateralApproach;
+import jfmltrainer.trainer.tuning.lateral.approach.global.GlobalEvaluator;
 
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class LocalApproach extends LateralApproach {
+
+    public LocalApproach() {
+        super();
+        this.evaluator = new LocalEvaluator();
+    }
 
     @Override
     public Integer getNGenes(KnowledgeBaseType knowledgeBase, RuleBaseType ruleBase) {

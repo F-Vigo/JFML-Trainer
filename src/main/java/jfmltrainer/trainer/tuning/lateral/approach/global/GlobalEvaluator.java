@@ -1,6 +1,6 @@
 package jfmltrainer.trainer.tuning.lateral.approach.global;
 
-import jfmltrainer.trainer.tuning.lateral.Evaluator;
+import jfmltrainer.trainer.tuning.lateral.approach.Evaluator;
 
 public class GlobalEvaluator extends Evaluator {
 

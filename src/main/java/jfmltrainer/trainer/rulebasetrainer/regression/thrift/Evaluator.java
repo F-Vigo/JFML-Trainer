@@ -10,10 +10,8 @@ import jfmltrainer.data.instance.RegressionInstance;
 import jfmltrainer.operator.and.AndOperator;
 import jfmltrainer.trainer.MethodConfig;
 import jfmltrainer.trainer.rulebasetrainer.RuleBaseTrainerUtils;
-import jfmltrainer.trainer.tuning.lateral.Chromosome;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -34,7 +32,7 @@ public class Evaluator {
         return -Utils.computeMSE(realValueList, predictedValueList);
     }
 
-    protected List<List<Float>> getPredictedValueList(Data data, RuleBaseType ruleBase, MethodConfig methodConfig) {
+    private List<List<Float>> getPredictedValueList(Data data, RuleBaseType ruleBase, MethodConfig methodConfig) {
         return (List<List<Float>>) data.getInstanceList().stream()
                 .map(instance -> predictInstance((RegressionInstance) instance, ruleBase, methodConfig))
                 .collect(Collectors.toList());
@@ -42,7 +40,7 @@ public class Evaluator {
 
     private List<Float> predictInstance(RegressionInstance instance, RuleBaseType ruleBase, MethodConfig methodConfig) {
         Integer bestRulePos = Utils.argMax(
-                IntStream.range(0,ruleBase.getRules().size()).boxed().collect(Collectors.toList()),
+                IntStream.range(0, ruleBase.getRules().size()).boxed().collect(Collectors.toList()),
                 i -> getMatchingDegree(instance, i, ruleBase, methodConfig)
         );
         return this.defuzzify(bestRulePos, ruleBase);
@@ -50,8 +48,7 @@ public class Evaluator {
 
     private Float getMatchingDegree(RegressionInstance instance, Integer rulePos, RuleBaseType ruleBase, MethodConfig methodConfig) {
         int antecedentSize = instance.getAntecedentValueList().size();
-        List<Float> MFValueList = IntStream.range(0, antecedentSize)
-                .boxed()
+        List<Float> MFValueList = IntStream.range(0, antecedentSize).boxed()
                 .map(i -> getMFTerm(instance, rulePos, ruleBase, i))
                 .collect(Collectors.toList());
         AndOperator andOperator = methodConfig.getAndOperator().get();
@@ -67,15 +64,14 @@ public class Evaluator {
 
     private List<Float> defuzzify(Integer bestRulePos, RuleBaseType ruleBase) {
         FuzzyRuleType rule = ruleBase.getRules().get(bestRulePos);
-        int antecedentSize = rule.getAntecedent().getClauses().size();
         int consequentSize = rule.getConsequent().getThen().getClause().size();
         List<Float> defuzzifiedValueList = IntStream.range(0, consequentSize).boxed()
-                .map(i -> defuzzifyValue(bestRulePos, ruleBase, i, antecedentSize))
+                .map(i -> defuzzifyValue(bestRulePos, ruleBase, i))
                 .collect(Collectors.toList());
         return defuzzifiedValueList;
     }
 
-    private Float defuzzifyValue(Integer bestRulePos, RuleBaseType ruleBase, Integer consequentVarPos, Integer antecedentSize) {
+    private Float defuzzifyValue(Integer bestRulePos, RuleBaseType ruleBase, Integer consequentVarPos) {
         FuzzyRuleType rule = ruleBase.getRules().get(bestRulePos);
         FuzzyTermType term = (FuzzyTermType) rule.getConsequent().getThen().getClause().get(consequentVarPos).getTerm();
         return Utils.defuzzify(term, term.getXValuesDefuzzifier());
