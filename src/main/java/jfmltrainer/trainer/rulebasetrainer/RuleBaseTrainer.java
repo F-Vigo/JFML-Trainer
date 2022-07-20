@@ -20,7 +20,14 @@ public abstract class RuleBaseTrainer<T extends Instance> {
         exportFuzzySystem(fuzzySystem, outputFolder, outputName);
     }
 
-    protected abstract ImmutablePair<KnowledgeBaseType, RuleBaseType> trainRuleBase(Data<T> data, KnowledgeBaseType knowledgeBase, MethodConfig methodConfig);
+    protected abstract ImmutablePair<
+            KnowledgeBaseType,
+            RuleBaseType
+            > trainRuleBase(
+                    Data<T> data,
+                    KnowledgeBaseType knowledgeBase,
+                    MethodConfig methodConfig
+    );
 
     private void exportFuzzySystem(ImmutablePair<KnowledgeBaseType, ? extends RuleBaseType> fuzzySystem, String outputFolder, String outputName) {
         FuzzySystemType fuzzySystemType = new FuzzySystemType();

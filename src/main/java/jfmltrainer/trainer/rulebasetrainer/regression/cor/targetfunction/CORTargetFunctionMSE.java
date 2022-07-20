@@ -3,7 +3,7 @@ package jfmltrainer.trainer.rulebasetrainer.regression.cor.targetfunction;
 import jfml.knowledgebase.KnowledgeBaseType;
 import jfml.rule.FuzzyRuleType;
 import jfml.term.FuzzyTerm;
-import jfmltrainer.Utils;
+import jfmltrainer.aux.Utils;
 import jfmltrainer.data.Data;
 import jfmltrainer.data.instance.RegressionInstance;
 import jfmltrainer.trainer.rulebasetrainer.RuleBaseTrainerUtils;

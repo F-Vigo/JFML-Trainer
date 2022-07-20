@@ -5,7 +5,8 @@ import jfml.knowledgebase.variable.KnowledgeBaseVariable;
 import jfml.rule.FuzzyRuleType;
 import jfml.rulebase.RuleBaseType;
 import jfml.term.FuzzyTermType;
-import jfmltrainer.Utils;
+import jfmltrainer.aux.JFMLRandom;
+import jfmltrainer.aux.Utils;
 import jfmltrainer.data.Data;
 import jfmltrainer.data.instance.RegressionInstance;
 import jfmltrainer.trainer.MethodConfig;
@@ -23,6 +24,8 @@ public class Thrift extends RegressionTrainer {
     private static Integer POPULATION_SIZE = 100; // TODO
     private static Float MUTATION_PROB = 0.8F; // TODO
     private static Evaluator evaluator = new Evaluator();
+
+    private JFMLRandom JFMLRandom = new JFMLRandom();
 
     @Override
     protected ImmutablePair<KnowledgeBaseType, RuleBaseType> trainRuleBase(Data<RegressionInstance> data, KnowledgeBaseType knowledgeBase, MethodConfig methodConfig) {
@@ -81,7 +84,7 @@ public class Thrift extends RegressionTrainer {
 
     private FuzzyTermType getRandomTerm(KnowledgeBaseVariable variable) {
         Integer termListSize = variable.getTerms().size();
-        Integer termPos = (int) (Math.random() * termListSize);
+        Integer termPos = JFMLRandom.randInt(termListSize);
         return (FuzzyTermType) (variable.getTerms().get(termPos));
     }
 
@@ -108,22 +111,22 @@ public class Thrift extends RegressionTrainer {
                 .get();
         List<ImmutablePair<Chromosome, Chromosome>> parentList = new ArrayList<>();
         for (int i = 0; i < POPULATION_SIZE / 2; i++) {
-            Integer pickedPosition1 = pickParentPosition(Math.random(), fitnessList, totalProb);
-            Integer pickedPosition2 = pickParentPosition(Math.random(), fitnessList, totalProb);
+            Integer pickedPosition1 = pickParentPosition(JFMLRandom.randReal(), fitnessList, totalProb);
+            Integer pickedPosition2 = pickParentPosition(JFMLRandom.randReal(), fitnessList, totalProb);
             parentList.add(new ImmutablePair<>(population.get(pickedPosition1), population.get(pickedPosition2)));
         }
         return parentList;
     }
 
-    private Integer pickParentPosition(double random, List<Float> fitnessList, Float totalProb) {
-        return pickParentPositionAux(random, 0, fitnessList.get(0), fitnessList.subList(1, fitnessList.size()), totalProb);
+    private Integer pickParentPosition(double randReal, List<Float> fitnessList, Float totalProb) {
+        return pickParentPositionAux(randReal, 0, fitnessList.get(0), fitnessList.subList(1, fitnessList.size()), totalProb);
     }
 
-    private Integer pickParentPositionAux(double random, int i, Float accumSum, List<Float> remainingFitnessList, Float totalProb) {
-        if ((accumSum / totalProb) >= random) {
+    private Integer pickParentPositionAux(double randReal, int i, Float accumSum, List<Float> remainingFitnessList, Float totalProb) {
+        if ((accumSum / totalProb) >= randReal) {
             return i;
         }
-        return pickParentPositionAux(random, i + 1, accumSum + remainingFitnessList.get(0), remainingFitnessList.subList(1, remainingFitnessList.size()), totalProb);
+        return pickParentPositionAux(randReal, i + 1, accumSum + remainingFitnessList.get(0), remainingFitnessList.subList(1, remainingFitnessList.size()), totalProb);
     }
 
     private List<Chromosome> getOffspring(
@@ -171,7 +174,7 @@ public class Thrift extends RegressionTrainer {
 
     private List<Chromosome> mutate(List<Chromosome> nextGeneration, Data<RegressionInstance> data, KnowledgeBaseType knowledgeBase, MethodConfig methodConfig) {
 
-        int muNext = (int) Math.ceil(Math.log(Math.random()) / Math.log(1.0 - MUTATION_PROB));
+        int muNext = (int) Math.ceil(Math.log(JFMLRandom.randReal()) / Math.log(1.0 - MUTATION_PROB));
         int nGenes = nextGeneration.get(0).getGeneList().size();
         int allPositions = POPULATION_SIZE * nGenes;
 
@@ -187,7 +190,7 @@ public class Thrift extends RegressionTrainer {
             Float fitness = (float) evaluator.evaluate(data, decodeChromosome(newChromosome, knowledgeBase), knowledgeBase, methodConfig);
             newChromosome.setFitness(fitness);
             nextGeneration.set(chromosomeIndex, newChromosome);
-            muNext += (int) Math.ceil(Math.log(Math.random()) / Math.log(1.0 - MUTATION_PROB));
+            muNext += (int) Math.ceil(Math.log(JFMLRandom.randReal()) / Math.log(1.0 - MUTATION_PROB));
         }
         return nextGeneration;
     }
@@ -197,7 +200,7 @@ public class Thrift extends RegressionTrainer {
         Integer newGenePos = null;
 
         if (oldGene.isEmpty()) {
-            newGenePos = (int) (Math.random() * (outputTermList.size()));
+            newGenePos = JFMLRandom.randInt(outputTermList.size());
         } else {
             Integer termPos = IntStream.range(0, outputTermList.size()).boxed()
                     .filter(i -> outputTermList.get(i).getName().equals(oldGene.get().getName()))
@@ -206,7 +209,7 @@ public class Thrift extends RegressionTrainer {
                 newGenePos = 1;
             } else if (termPos == outputTermList.size() - 1) {
                 newGenePos = outputTermList.size() - 2;
-            } else if (Math.random() < 0.5) {
+            } else if (JFMLRandom.randReal() < 0.5) {
                 newGenePos = termPos - 1;
             } else {
                 newGenePos = termPos + 1;

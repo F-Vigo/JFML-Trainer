@@ -3,7 +3,7 @@ package jfmltrainer.trainer.tuning.lateral.approach;
 import jfml.rule.FuzzyRuleType;
 import jfml.rulebase.RuleBaseType;
 import jfml.term.FuzzyTermType;
-import jfmltrainer.Utils;
+import jfmltrainer.aux.Utils;
 import jfmltrainer.data.Data;
 import jfmltrainer.data.instance.RegressionInstance;
 import jfmltrainer.operator.and.AndOperator;

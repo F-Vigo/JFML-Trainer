@@ -1,4 +1,4 @@
-package jfmltrainer;
+package jfmltrainer.aux;
 
 import jfml.knowledgebase.KnowledgeBaseType;
 import jfml.knowledgebase.variable.FuzzyVariableType;
@@ -21,6 +21,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class Utils {
+
+    private static JFMLRandom JFMLRandom = new JFMLRandom();
 
     public static Float computeAccuracy(List<List<String>> realValueList, List<List<String>> predictedValueList) {
         int n = realValueList.size();
@@ -103,8 +105,11 @@ public class Utils {
         List<T> child1 = new ArrayList<>(n);
         List<T> child2 = new ArrayList<>(n);
 
-        Integer pos1 = (int) (Math.random() * n);
-        Integer pos2 = (int) (Math.random() * n);
+        Integer pos1 = JFMLRandom.randInt(n);
+        Integer pos2;
+        do {
+            pos2 = JFMLRandom.randInt(n);
+        } while (pos1 == pos2);
 
         Integer posL = Math.min(pos1, pos2);
         Integer posR = Math.max(pos1, pos2);

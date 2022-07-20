@@ -2,7 +2,8 @@ package jfmltrainer.trainer.tuning.lateral;
 
 import jfml.knowledgebase.KnowledgeBaseType;
 import jfml.rulebase.RuleBaseType;
-import jfmltrainer.Utils;
+import jfmltrainer.aux.JFMLRandom;
+import jfmltrainer.aux.Utils;
 import jfmltrainer.data.Data;
 import jfmltrainer.trainer.MethodConfig;
 import jfmltrainer.trainer.tuning.Tuner;
@@ -10,12 +11,15 @@ import jfmltrainer.trainer.tuning.lateral.approach.LateralApproach;
 import jfmltrainer.trainer.tuning.lateral.selectionvariant.LateralSelectionVariant;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
+
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public abstract class LateralDisplacement extends Tuner {
+
+    private JFMLRandom JFMLRandom = new JFMLRandom();
 
     protected static Integer BITSGENE = 0; // TODO
     protected static Integer MAX_ITER = 0; // TODO
@@ -86,13 +90,13 @@ public abstract class LateralDisplacement extends Tuner {
             Float L,
             Integer populationSize
     ) {
-        Collections.shuffle(population);
-        List<ImmutablePair<Chromosome, Chromosome>> parentCandidateList = selectParentCandidates(population);
+        List<Chromosome> shuffledPopulation = JFMLRandom.shuffle(population);
+        List<ImmutablePair<Chromosome, Chromosome>> parentCandidateList = selectParentCandidates(shuffledPopulation);
         List<Chromosome> offspringList = breedOffspring(parentCandidateList, L, data, ruleBase, methodConfig);
 
         List<ImmutablePair<Chromosome, Boolean>> newPopulationAndIsOffspring = new ArrayList<>();
         newPopulationAndIsOffspring.addAll(
-                population.stream()
+                shuffledPopulation.stream()
                         .map(parent -> new ImmutablePair<>(parent, false))
                         .collect(Collectors.toList())
         );
@@ -147,13 +151,13 @@ public abstract class LateralDisplacement extends Tuner {
     }
 
     private List<ImmutablePair<Chromosome, Chromosome>> selectParentCandidates(List<Chromosome> population) {
-        List<Integer> shuffledPositions = IntStream.range(0, population.size()).boxed().collect(Collectors.toList());
-        Collections.shuffle(shuffledPositions);
+        List<Integer> positions = IntStream.range(0, population.size()).boxed().collect(Collectors.toList());
+        List<Integer> shuffledPositions = JFMLRandom.shuffle(positions);
         List<ImmutablePair<Chromosome, Chromosome>> parentCandidateList = new ArrayList<>();
         for (int i = 0; i < population.size(); i+=2) {
             parentCandidateList.add(new ImmutablePair<>(
-                    population.get(i),
-                    population.get(i+1)
+                    population.get(shuffledPositions.get(i)),
+                    population.get(shuffledPositions.get(i+1))
             ));
         }
         return parentCandidateList;
@@ -185,7 +189,7 @@ public abstract class LateralDisplacement extends Tuner {
     }
 
     private Float getRandom() {
-        return (float) Math.random() - 0.5F;
+        return JFMLRandom.randReal(-0.5F, 0.5F);
     }
 
 

@@ -9,6 +9,7 @@ import jfml.rule.FuzzyRuleType;
 import jfml.rulebase.RuleBaseType;
 import jfml.term.FuzzyTermType;
 import jfml.term.TskTermType;
+import jfmltrainer.aux.JFMLRandom;
 import jfmltrainer.data.Data;
 import jfmltrainer.data.instance.RegressionInstance;
 import jfmltrainer.trainer.MethodConfig;
@@ -32,6 +33,8 @@ public class ANFIS extends RegressionTrainer {
     private AnfisSixthLayer sixthLayer = new AnfisSixthLayer();
 
     private WeightsUpdater weightsUpdater = new WeightsUpdater();
+    
+    private JFMLRandom JFMLRandom = new JFMLRandom();
 
 
     @Override
@@ -63,7 +66,7 @@ public class ANFIS extends RegressionTrainer {
         for (int i = 0; i < nRules; i++) {
             List<Float> sublist = new ArrayList<>();
             for (int j = 0; j < nVar; j++) {
-                sublist.add((float) Math.random());
+                sublist.add((float) JFMLRandom.randReal());
             }
             result.add(sublist);
         }
@@ -75,8 +78,8 @@ public class ANFIS extends RegressionTrainer {
         for (int i = 0; i < nVar; i++) {
             List<ImmutablePair<Float, Float>> weightsPerVariable = new ArrayList<>();
             for (int j = 0; j < nTermList.get(i); j++) {
-                Float a = (float) Math.random();
-                Float b = (float) Math.random();
+                Float a = JFMLRandom.randReal();
+                Float b = JFMLRandom.randReal();
                 weightsPerVariable.add(new ImmutablePair<>(a, b));
             }
             result.add(weightsPerVariable);

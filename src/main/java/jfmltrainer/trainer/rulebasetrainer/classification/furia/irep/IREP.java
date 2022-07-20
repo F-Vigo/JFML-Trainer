@@ -2,6 +2,7 @@ package jfmltrainer.trainer.rulebasetrainer.classification.furia.irep;
 
 import jfml.knowledgebase.KnowledgeBaseType;
 import jfml.knowledgebase.variable.KnowledgeBaseVariable;
+import jfmltrainer.aux.JFMLRandom;
 import jfmltrainer.data.Data;
 import jfmltrainer.data.instance.ClassificationInstance;
 import jfmltrainer.trainer.rulebasetrainer.classification.furia.irep.rule.CrispClause;
@@ -19,6 +20,8 @@ public class IREP {
 
     private static Float GROW_PROPORTION = 0.8F; // TODO
     private static Integer SURPLUS = 64;
+
+    private JFMLRandom JFMLRandom = new JFMLRandom();
 
 
     public List<CrispRule> getIREPRuleSet(Data data, KnowledgeBaseType knowledgeBase) {
@@ -263,9 +266,9 @@ public class IREP {
         Integer border = Math.round(GROW_PROPORTION * size);
 
         List<Integer> positions = IntStream.range(0, size).boxed().collect(Collectors.toList());
-        Collections.shuffle(positions);
+        List<Integer> shuffledPositions = JFMLRandom.shuffle(positions);
 
-        List<Integer> positionsToGrow = positions.subList(0, border);
+        List<Integer> positionsToGrow = shuffledPositions.subList(0, border);
         List<BinaryIREPInstance> growList = new ArrayList<>();
         List<BinaryIREPInstance> pruneList = new ArrayList<>();
 

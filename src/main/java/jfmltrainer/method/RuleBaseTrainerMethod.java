@@ -25,7 +25,7 @@ public enum RuleBaseTrainerMethod { // TODO - This may need extension (like for 
     FURIA(Problem.CLASSIFICATION, null, null, null),
 
     // TUNING
-    GA_THREE_POINTS(Problem.TUNING, null, null, null),
+    // GA_THREE_POINTS(Problem.TUNING, null, null, null),
     LAT(Problem.TUNING, null, null, null),
     DELTA_JUMP(Problem.TUNING, null, null, null);
 

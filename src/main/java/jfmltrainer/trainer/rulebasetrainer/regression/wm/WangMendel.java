@@ -3,7 +3,7 @@ package jfmltrainer.trainer.rulebasetrainer.regression.wm;
 import jfml.knowledgebase.KnowledgeBaseType;
 import jfml.rule.FuzzyRuleType;
 import jfml.rulebase.RuleBaseType;
-import jfmltrainer.Utils;
+import jfmltrainer.aux.Utils;
 import jfmltrainer.data.Data;
 import jfmltrainer.data.instance.Instance;
 import jfmltrainer.operator.and.AndOperator;

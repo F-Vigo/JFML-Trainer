@@ -8,7 +8,7 @@ import jfml.rule.ConsequentType;
 import jfml.rule.FuzzyRuleType;
 import jfml.rulebase.RuleBaseType;
 import jfml.term.FuzzyTermType;
-import jfmltrainer.Utils;
+import jfmltrainer.aux.Utils;
 import jfmltrainer.data.Data;
 import jfmltrainer.data.instance.ClassificationInstance;
 import jfmltrainer.trainer.MethodConfig;

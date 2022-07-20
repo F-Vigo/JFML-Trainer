@@ -1,7 +1,7 @@
 package jfmltrainer.trainer.tuning.lateral.selectionvariant;
 
 import jfml.rulebase.RuleBaseType;
-import jfmltrainer.Utils;
+import jfmltrainer.aux.Utils;
 import jfmltrainer.data.Data;
 import jfmltrainer.trainer.MethodConfig;
 import jfmltrainer.trainer.tuning.lateral.Chromosome;
@@ -22,7 +22,7 @@ public class LateralDisplacementWithSelection extends LateralSelectionVariant {
 
     @Override
     public Boolean getSelected() {
-        return Math.random() <= 0.5;
+        return JFMLRandom.randReal() <= 0.5;
     }
 
     @Override

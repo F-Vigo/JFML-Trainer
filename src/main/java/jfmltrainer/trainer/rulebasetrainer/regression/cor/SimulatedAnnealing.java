@@ -1,5 +1,6 @@
 package jfmltrainer.trainer.rulebasetrainer.regression.cor;
 
+import jfmltrainer.aux.JFMLRandom;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import java.util.Collections;
@@ -18,6 +19,8 @@ public class SimulatedAnnealing {
 
     private static Integer MAX_NEIGHBOURS = 1;
     private static Integer MAX_HITS = 1;
+
+    private static JFMLRandom JFMLRandom = new JFMLRandom();
 
 
     public static <T> T run(
@@ -84,15 +87,15 @@ public class SimulatedAnnealing {
     }
 
     private static Boolean isNeighbourAccepted(Float targetValueIncrement, Float temperature) { // Metropolis criterium
-        return targetValueIncrement < 0 || Math.random() < Math.exp(-targetValueIncrement/temperature);
+        return targetValueIncrement < 0 || JFMLRandom.randReal() < Math.exp(-targetValueIncrement/temperature);
     }
 
     private static <T> T getNewSolution(T currentSolution, List<T> searchSpace, Function<T, Predicate<T>> neighbourFilter) {
         List<T> neighbourList = searchSpace.stream()
                 .filter(neighbourFilter.apply(currentSolution))
                 .collect(Collectors.toList());
-        Collections.shuffle(neighbourList);
-        return Optional.ofNullable(neighbourList.get(0))
+        List<T> shuffledNeighbourList = JFMLRandom.shuffle(neighbourList);
+        return Optional.ofNullable(shuffledNeighbourList.get(0))
                 .orElse(currentSolution);
     }
 }

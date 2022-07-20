@@ -4,7 +4,7 @@ import jfml.knowledgebase.KnowledgeBaseType;
 import jfml.knowledgebase.variable.KnowledgeBaseVariable;
 import jfml.rulebase.RuleBaseType;
 import jfml.term.FuzzyTermType;
-import jfmltrainer.Utils;
+import jfmltrainer.aux.Utils;
 import jfmltrainer.data.Data;
 import jfmltrainer.data.instance.ClassificationInstance;
 import jfmltrainer.data.instance.Instance;
