@@ -7,6 +7,14 @@ import java.util.stream.Collectors;
 
 public class RegressionDataParser extends DataParser<RegressionInstance> {
 
+    private static RegressionDataParser instance = new RegressionDataParser();
+
+    private RegressionDataParser(){}
+
+    public static RegressionDataParser getInstance() {
+        return instance;
+    }
+
 
     @Override
     protected RegressionInstance getInstanceFromValues(List<Float> antecedentValueList, List<String> consequentValueListAsString) {

@@ -2,6 +2,14 @@ package jfmltrainer.operator.and;
 
 public class AndOperatorNILMIN extends AndOperator {
 
+    private static AndOperatorNILMIN instance = new AndOperatorNILMIN();
+
+    private AndOperatorNILMIN(){}
+
+    public static AndOperatorNILMIN getInstance() {
+        return instance;
+    }
+
     @Override
     public Float apply(Float x, Float y) {
         return (x+y)>1

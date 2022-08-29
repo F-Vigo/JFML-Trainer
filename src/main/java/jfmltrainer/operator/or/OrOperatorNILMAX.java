@@ -2,6 +2,14 @@ package jfmltrainer.operator.or;
 
 public class OrOperatorNILMAX extends OrOperator {
 
+    private static OrOperatorNILMAX instance = new OrOperatorNILMAX();
+
+    private OrOperatorNILMAX(){}
+
+    public static OrOperatorNILMAX getInstance() {
+        return instance;
+    }
+
     @Override
     public Float apply(Float x, Float y) {
         return (x+y<1)

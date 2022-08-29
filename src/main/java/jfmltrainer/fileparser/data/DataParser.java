@@ -6,7 +6,6 @@ import jfmltrainer.fileparser.FileParser;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
@@ -23,7 +22,7 @@ public abstract class DataParser<T extends Instance> implements FileParser<Data<
             System.out.println(e.getMessage());
         }
 
-        List<T> instanceList = new ArrayList<>(Collections.emptyList());
+        List<T> instanceList = new ArrayList<>();
         while(scanner.hasNextLine()) {
 
             List<String> valueList = List.of(scanner.nextLine().split(";")); // Length equals 2 (input, output).
@@ -39,6 +38,7 @@ public abstract class DataParser<T extends Instance> implements FileParser<Data<
             instanceList.add(getInstanceFromValues(antecedentValueList, consequentValueListAsString));
         }
 
+        scanner.close();
         return new Data<>(instanceList);
     }
 

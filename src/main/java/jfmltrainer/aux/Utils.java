@@ -3,6 +3,7 @@ package jfmltrainer.aux;
 import jfml.knowledgebase.KnowledgeBaseType;
 import jfml.knowledgebase.variable.FuzzyVariableType;
 import jfml.knowledgebase.variable.KnowledgeBaseVariable;
+import jfml.rule.ClauseType;
 import jfml.rule.FuzzyRuleType;
 import jfml.rulebase.RuleBaseType;
 import jfml.term.FuzzyTerm;
@@ -10,19 +11,22 @@ import jfml.term.FuzzyTermType;
 import jfmltrainer.data.instance.Instance;
 import jfmltrainer.method.Problem;
 import jfmltrainer.operator.OperatorParser;
+import jfmltrainer.operator.and.AndOperatorParser;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class Utils {
 
-    private static JFMLRandom JFMLRandom = new JFMLRandom();
+    private static JFMLRandom JFMLRandom = jfmltrainer.aux.JFMLRandom.getInstance();
 
     public static Float computeAccuracy(List<List<String>> realValueList, List<List<String>> predictedValueList) {
         int n = realValueList.size();
@@ -101,9 +105,14 @@ public class Utils {
     }
 
     public static <T> ImmutablePair<List<T>, List<T>> twoPointCrossover(List<T> list1, List<T> list2) {
+
         Integer n = list1.size();
         List<T> child1 = new ArrayList<>(n);
         List<T> child2 = new ArrayList<>(n);
+        for (int i = 0; i < n; i++) {
+            child1.add(null);
+            child2.add(null);
+        }
 
         Integer pos1 = JFMLRandom.randInt(n);
         Integer pos2;
@@ -119,8 +128,8 @@ public class Utils {
             child2.set(i, list2.get(i));
         }
         for (int i = posL; i < posR; i++) {
-            list1.set(i, child2.get(i));
-            list2.set(i, child1.get(i));
+            child1.set(i, list2.get(i));
+            child2.set(i, list1.get(i));
         }
         for (int i = posR; i < n; i++) {
             child1.set(i, list1.get(i));
@@ -135,12 +144,17 @@ public class Utils {
         List<FuzzyTermType> termList = (List<FuzzyTermType>) variable.getTerms();
         termList.clear();
 
+        Function<FuzzyRuleType, List<ClauseType>> clauseListSupplier = rule -> variable.isInput()
+                ? rule.getAntecedent().getClauses()
+                : rule.getConsequent().getThen().getClause();
+
         List<FuzzyTermType> newTermList = ruleBase.getRules().stream()
-                .map(rule -> rule.getAntecedent().getClauses().stream()
+                .map(rule -> clauseListSupplier.apply(rule).stream()
                         .filter(clause -> ((FuzzyVariableType) clause.getVariable()).getName().equals(variable.getName()))
                         .findFirst().get()
                 )
-                .map(clause -> (FuzzyTermType) clause.getTerm()).collect(Collectors.toList());
+                .map(clause -> (FuzzyTermType) clause.getTerm())
+                .collect(Collectors.toList());
 
         termList.addAll(newTermList);
     }
@@ -223,7 +237,7 @@ public class Utils {
                 .collect(Collectors.toList());
 
         return mfValueList.stream()
-                .reduce(OperatorParser.getAndOperator(Optional.ofNullable(rule.getAndMethod()), null)::apply)
+                .reduce(AndOperatorParser.getInstance().fromString(rule.getAndMethod()).get()::apply)
                 .get();
     }
 

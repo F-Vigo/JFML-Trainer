@@ -2,7 +2,11 @@ package jfmltrainer;
 
 import jfmltrainer.args.Args;
 import jfmltrainer.args.ArgsParser;
-import jfmltrainer.trainer.rulebasetrainer.RuleBaseTrainerSelector;
+import jfmltrainer.task.Task;
+import jfmltrainer.task.graphics.JFMLTrainerGraphics;
+import jfmltrainer.task.knowledgebasebuilder.KnowledgeBaseBuilder;
+import jfmltrainer.task.metrics.Metrics;
+import jfmltrainer.task.rulebasetrainer.RuleBaseTrainerSelector;
 
 public class Main {
 
@@ -18,14 +22,18 @@ public class Main {
 
     private static void doTask(Task task, Args args) { // TODO - Define errors this may throw.
 
-        RuleBaseTrainerSelector ruleBaseTrainerSelector = new RuleBaseTrainerSelector();
-
         switch (task) {
             case RULE_BASE_TRAINER:
-                ruleBaseTrainerSelector.train(args);
+                RuleBaseTrainerSelector.getInstance().train(args);
                 break;
-            case KNOWLEDGE_BASE_TRAINER:
-                // TODO;
+            case KNOWLEDGE_BASE_BUILDER:
+                KnowledgeBaseBuilder.build(args);
+                break;
+            case GRAPHICS:
+                JFMLTrainerGraphics.drawAndSaveImage(args);
+                break;
+            case METRICS:
+                Metrics.computeMetrics(args);
                 break;
         }
     }

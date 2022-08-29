@@ -1,33 +1,26 @@
 package jfmltrainer.operator;
 
-import jfmltrainer.method.RuleBaseTrainerMethod;
-import jfmltrainer.operator.and.AndOperator;
-import jfmltrainer.operator.and.AndOperatorMIN;
-import jfmltrainer.operator.or.OrOperator;
-import jfmltrainer.operator.or.OrOperatorMAX;
-import jfmltrainer.operator.rvf.RVFOperator;
-import jfmltrainer.operator.rvf.RVFOperatorMAX;
-import jfmltrainer.operator.then.ThenOperator;
-import jfmltrainer.operator.then.ThenOperatorMIN;
-
 import java.util.Optional;
 
-public class OperatorParser {
+public abstract class OperatorParser<T> {
 
+    public abstract <T extends Operator> Optional<T> fromString(String name);
+
+    /*
     public static AndOperator getAndOperator(Optional<String> name, RuleBaseTrainerMethod method) {
-        return getOperator(name, method, method.getDefaultAndOperator(), new AndOperatorMIN(), "AND");
+        return getOperator(name, method, method.getDefaultAndOperator(), AndOperatorMIN.getInstance(), "AND");
     }
 
     public static OrOperator getOrOperator(Optional<String> name, RuleBaseTrainerMethod method) {
-        return getOperator(name, method, method.getDefaultOrOperator(), new OrOperatorMAX(), "OR");
+        return getOperator(name, method, method.getDefaultOrOperator(), OrOperatorMAX.getInstance(), "OR");
     }
 
     public static ThenOperator getThenOperator(Optional<String> name, RuleBaseTrainerMethod method) {
-        return getOperator(name, method, method.getThenOperator(), new ThenOperatorMIN(), "THEN");
+        return getOperator(name, method, method.getThenOperator(), ThenOperatorMIN.getInstance(), "THEN");
     }
 
     public static RVFOperator getRVFOperator(Optional<String> name) {
-        return getOperator(name, RuleBaseTrainerMethod.CORDON_HERRERA, Optional.of(new RVFOperatorMAX()), null, "RVF");
+        return getOperator(name, RuleBaseTrainerMethod.CORDON_HERRERA, Optional.of(RVFOperatorMAX.getInstance()), null, "RVF");
     }
 
     private static <T extends Operator> T getOperator(Optional<String> name, RuleBaseTrainerMethod method, Optional<T> methodDefaultOperator, T defaultOperator, String operatorType) {
@@ -50,4 +43,6 @@ public class OperatorParser {
             }
         }
     }
+
+     */
 }

@@ -8,6 +8,24 @@ public class JFMLRandom {
 
     private int seed;
 
+    private static JFMLRandom instance;
+
+    private JFMLRandom(Integer seed) {
+        this.seed = seed;
+    }
+
+    public static void createObject(Integer seed) {
+        instance = new JFMLRandom(seed);
+    }
+
+    public static JFMLRandom getInstance() {
+        return instance;
+    }
+
+    public static void setInstance(JFMLRandom newInstance) {
+        instance = newInstance;
+    }
+
     public Float randReal() {
         return (float) Math.random();
     }

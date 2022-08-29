@@ -14,19 +14,19 @@ import jfmltrainer.operator.and.AndOperatorMIN;
 import jfmltrainer.operator.or.OrOperatorMAX;
 import jfmltrainer.operator.rvf.RVFOperatorMAX;
 import jfmltrainer.operator.then.ThenOperatorMIN;
-import jfmltrainer.trainer.MethodConfig;
-import jfmltrainer.trainer.rulebasetrainer.regression.cor.CORSearchMethod;
+import jfmltrainer.task.rulebasetrainer.MethodConfig;
+import jfmltrainer.task.rulebasetrainer.regression.cor.CORSearchMethod;
 
 import java.util.Optional;
 
 public class TestUtils {
 
     public static Data<RegressionInstance> getSimpleTipperMamdaniData() {
-        return new RegressionDataParser().read("src/test/resources/data/SimpleTipperMamdaniData.txt");
+        return RegressionDataParser.getInstance().read("src/test/resources/data/SimpleTipperMamdaniData.txt");
     }
 
     public static Data<ClassificationInstance> getSimpleIrisMamdaniData() {
-        return new ClassificationDataParser().read("src/test/resources/data/SimpleIrisMamdaniData.txt");
+        return ClassificationDataParser.getInstance().read("src/test/resources/data/SimpleIrisMamdaniData.txt");
     }
 
     public static KnowledgeBaseType getSimpleTipperMamdaniKnowledgeBase() {
@@ -41,11 +41,19 @@ public class TestUtils {
 
     public static MethodConfig getSimpleMethodConfig() {
         return new MethodConfig(
-                Optional.of(new AndOperatorMIN()),
-                Optional.of(new OrOperatorMAX()),
-                Optional.of(new ThenOperatorMIN()),
-                Optional.of(new RVFOperatorMAX()),
-                Optional.of(CORSearchMethod.EXPLICIT_ENUMERATION)
+                AndOperatorMIN.getInstance(),
+                OrOperatorMAX.getInstance(),
+                ThenOperatorMIN.getInstance(),
+                Optional.of(RVFOperatorMAX.getInstance()),
+                Optional.of(CORSearchMethod.EXPLICIT_ENUMERATION),
+                Optional.of(100),
+                Optional.of(100),
+                Optional.of(0.1F),
+                Optional.of(0.8F),
+                Optional.of(64),
+                Optional.of(0),
+                Optional.of(true),
+                Optional.of(true)
         );
     }
 
