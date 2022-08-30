@@ -115,13 +115,6 @@ public class RuleBaseTrainerUtils {
         return weight;
     }
 
-    private static FuzzyTermType getBestRealSingleTerm(Instance instance, int outputVariableIndex, KnowledgeBaseVariable variable) {
-        return ((List<FuzzyTermType>) variable.getTerms()).stream()
-                .filter(term -> term.getName().equals(instance.getConsequentValueList().get(outputVariableIndex)))
-                .findAny()
-                .get();
-    }
-
     public static RuleBaseType buildRuleBase(List<FuzzyRuleType> prunedRuleList) {
         RuleBaseType ruleBase = new RuleBaseType();
         prunedRuleList.forEach(ruleBase::addRule);
@@ -132,7 +125,7 @@ public class RuleBaseTrainerUtils {
         return rule.getAntecedent().getClauses().toString();
     }
 
-    public static Boolean equalsRule(FuzzyRuleType x, FuzzyRuleType y) {
+    private static Boolean equalsRule(FuzzyRuleType x, FuzzyRuleType y) {
         Function<FuzzyRuleType, String> getConsequentClauseAsString = rule -> rule.getConsequent().getThen().getClause().toString();
         Boolean sameAntecedent = getAntecedentClausesAsString(x).equals(getAntecedentClausesAsString(y));
         Boolean sameConsequent = getConsequentClauseAsString.apply(x).equals(getConsequentClauseAsString.apply(y));
