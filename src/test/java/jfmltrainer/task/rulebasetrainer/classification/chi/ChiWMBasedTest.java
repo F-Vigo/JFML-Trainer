@@ -30,8 +30,6 @@ public class ChiWMBasedTest {
         Assert.assertEquals(2, ruleBase.getRules().size());
         assertFirstRulePresent(ruleBase);
         assertSecondRulePresent(ruleBase);
-
-        JFMLTrainerGraphics.drawAndSaveImage(knowledgeBase, Optional.empty(), ruleBase, Optional.empty()); // TODO - Remove
     }
 
 
