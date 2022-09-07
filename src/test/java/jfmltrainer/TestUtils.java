@@ -2,7 +2,7 @@ package jfmltrainer;
 
 import jfml.knowledgebase.KnowledgeBaseType;
 import jfml.knowledgebase.variable.FuzzyVariableType;
-import jfml.rule.FuzzyRuleType;
+import jfml.rule.*;
 import jfml.rulebase.RuleBaseType;
 import jfml.term.FuzzyTermType;
 import jfmltrainer.data.Data;
@@ -17,6 +17,8 @@ import jfmltrainer.operator.then.ThenOperatorMIN;
 import jfmltrainer.task.rulebasetrainer.MethodConfig;
 import jfmltrainer.task.rulebasetrainer.regression.cor.CORSearchMethod;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 public class TestUtils {
@@ -39,21 +41,25 @@ public class TestUtils {
         return buildSimpleIrisMamdaniKB();
     }
 
+    public static RuleBaseType getSimpleTipperMamdaniRuleBase() {
+        return buildSimpleTipperMamdaniRB();
+    }
+
     public static MethodConfig getSimpleMethodConfig() {
         return new MethodConfig(
                 AndOperatorMIN.getInstance(),
                 OrOperatorMAX.getInstance(),
                 ThenOperatorMIN.getInstance(),
-                Optional.of(RVFOperatorMAX.getInstance()),
-                Optional.of(CORSearchMethod.EXPLICIT_ENUMERATION),
-                Optional.of(100),
-                Optional.of(100),
-                Optional.of(0.1F),
-                Optional.of(0.8F),
-                Optional.of(64),
-                Optional.of(0),
-                Optional.of(true),
-                Optional.of(true)
+                RVFOperatorMAX.getInstance(),
+                CORSearchMethod.EXPLICIT_ENUMERATION,
+                100,
+                100,
+                0.1F,
+                0.8F,
+                64,
+                0,
+                true,
+                true
         );
     }
 
@@ -116,6 +122,44 @@ public class TestUtils {
         knowledgeBase.addVariable(tip);
 
         return knowledgeBase;
+    }
+
+
+
+    public static RuleBaseType buildSimpleTipperMamdaniRB() {
+
+        KnowledgeBaseType knowledgeBase = buildSimpleTipperMamdaniKB();
+
+        RuleBaseType ruleBase = new RuleBaseType();
+
+        FuzzyVariableType food = (FuzzyVariableType) knowledgeBase.getKnowledgeBaseVariables().get(0);
+        FuzzyVariableType service = (FuzzyVariableType) knowledgeBase.getKnowledgeBaseVariables().get(1);
+        FuzzyVariableType tip = (FuzzyVariableType) knowledgeBase.getKnowledgeBaseVariables().get(2);
+
+        AntecedentType antecedent1 = new AntecedentType(List.of(
+                new ClauseType(food, food.getTerm("rancid")),
+                new ClauseType(service, service.getTerm("good"))
+        ));
+        ConsequentType consequent1 = new ConsequentType(
+                new ConsequentClausesType(Collections.singletonList(new ClauseType(tip, tip.getTerm("average")))),
+                null
+        );
+        FuzzyRuleType rule1 = new FuzzyRuleType("", antecedent1, consequent1);
+
+        AntecedentType antecedent2 = new AntecedentType(List.of(
+                new ClauseType(food, food.getTerm("rancid")),
+                new ClauseType(service, service.getTerm("poor"))
+        ));
+        ConsequentType consequent2 = new ConsequentType(
+                new ConsequentClausesType(Collections.singletonList(new ClauseType(tip, tip.getTerm("cheap")))),
+                null
+        );
+        FuzzyRuleType rule2 = new FuzzyRuleType("", antecedent2, consequent2);
+
+        ruleBase.addRule(rule1);
+        ruleBase.addRule(rule2);
+
+        return ruleBase;
     }
 
 

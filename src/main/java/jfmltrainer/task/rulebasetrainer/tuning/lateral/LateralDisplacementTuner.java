@@ -14,16 +14,19 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 public class LateralDisplacementTuner extends Tuner {
 
     @Override
-    public ImmutablePair<KnowledgeBaseType, RuleBaseType> tune(Data data, KnowledgeBaseType knowledgeBase, RuleBaseType ruleBase, MethodConfig methodConfig) {
+    public ImmutablePair<KnowledgeBaseType, RuleBaseType> tuneFRBS(Data data, KnowledgeBaseType knowledgeBase, RuleBaseType ruleBase, MethodConfig methodConfig) {
         LateralDisplacement lateralDisplacement = null;
-        if (methodConfig.getIsGlobal().isEmpty() || methodConfig.getIsGlobal().get()) {
-            if (methodConfig.getIsWithoutSelection().isEmpty() || methodConfig.getIsWithoutSelection().get()) {
+
+
+
+        if (methodConfig.getIsGlobal()) {
+            if (methodConfig.getIsWithoutSelection()) {
                 lateralDisplacement = new GlobalLateralDisplacementWithoutSelection();
             } else {
                 lateralDisplacement = new GlobalLateralDisplacementWithSelection();
             }
         } else {
-            if (methodConfig.getIsWithoutSelection().isEmpty() || methodConfig.getIsWithoutSelection().get()) {
+            if (methodConfig.getIsWithoutSelection()) {
                 lateralDisplacement = new LocalLateralDisplacementWithoutSelection();
             } else {
                 lateralDisplacement = new LocalLateralDisplacementWithSelection();

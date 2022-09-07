@@ -44,7 +44,7 @@ public abstract class CORAbstract extends RegressionTrainer {
                     .collect(Collectors.groupingBy(RuleBaseTrainerUtils::getAntecedentClausesAsString));
 
             return searchSpacePerSubspace.values().stream()
-                    .map(getOptimalRulePerSubspace(methodConfig.getCorSearchMethod().get(), data, knowledgeBase, methodConfig))
+                    .map(getOptimalRulePerSubspace(methodConfig.getCorSearchMethod(), data, knowledgeBase, methodConfig))
                     .collect(Collectors.toList());
         }
 

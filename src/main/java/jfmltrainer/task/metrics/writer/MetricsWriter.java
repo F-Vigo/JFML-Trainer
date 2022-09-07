@@ -13,7 +13,7 @@ public abstract class MetricsWriter<T extends Measures> {
 
     public void write(List<T> measuresList) throws IOException {
         StringBuffer stringBuffer = buildStringBuffer(measuresList);
-        String instantString = Instant.now().toString();
+        String instantString = "metrics/" + Instant.now().toString();
         BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(new File(instantString + ".txt")));
         bufferedWriter.write(stringBuffer.toString());
         bufferedWriter.flush();

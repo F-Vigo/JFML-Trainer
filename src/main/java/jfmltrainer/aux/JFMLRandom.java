@@ -32,7 +32,7 @@ public class JFMLRandom {
 
     public Float randReal(Float a, Float b) {
         Float x = (float) Math.random();
-        return (b-a)*x + a;
+        return (b-1-a)*x + a;
     }
 
     public Integer randInt(Integer b) {

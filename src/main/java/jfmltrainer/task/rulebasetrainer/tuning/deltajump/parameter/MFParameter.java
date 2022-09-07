@@ -32,10 +32,12 @@ public class MFParameter extends Parameter {
     }
 
 
-    @Override
-    public Boolean tryToSetValue(Float value) {
-        return null;
-    }
+
+
+//    @Override
+  //  public Boolean tryToSetValue(Float value) {
+    //    return null;
+    //}
 
     @Override
     public Boolean tryToSetValue(Float value, List<Parameter> parameterList, KnowledgeBaseType knowledgeBase) {

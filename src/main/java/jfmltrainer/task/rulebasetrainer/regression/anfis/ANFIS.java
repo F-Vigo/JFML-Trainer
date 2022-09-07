@@ -32,9 +32,6 @@ public class ANFIS extends RegressionTrainer {
 
     private WeightsUpdater weightsUpdater = new WeightsUpdater();
 
-    private JFMLRandom JFMLRandom = jfmltrainer.aux.JFMLRandom.getInstance();
-
-
     @Override
     public ImmutablePair<KnowledgeBaseType, RuleBaseType> trainRuleBase(Data<RegressionInstance> data, KnowledgeBaseType knowledgeBase, MethodConfig methodConfig) {
         Integer nVar = knowledgeBase.getKnowledgeBaseVariables().size();
@@ -46,7 +43,7 @@ public class ANFIS extends RegressionTrainer {
         List<List<Float>> fifthLayerWeights = getInitialFifthLayerWeights(nVar, nRules);
         Weights weights = new Weights(secondLayerWeights, fifthLayerWeights);
 
-        for (int i = 0; i < methodConfig.getMaxIter().get(); i++) {
+        for (int i = 0; i < methodConfig.getMaxIter(); i++) {
             List<Float> iterationsPredictedValueList = iteration(data, secondLayerWeights, fifthLayerWeights);
             weights = weightsUpdater.updateWeights(weights, iterationsPredictedValueList, data, nRules, nTermList, firstLayer, secondLayer, thirdLayer, fourthLayer);
         }
@@ -64,7 +61,7 @@ public class ANFIS extends RegressionTrainer {
         for (int i = 0; i < nRules; i++) {
             List<Float> sublist = new ArrayList<>();
             for (int j = 0; j < nVar; j++) {
-                sublist.add((float) JFMLRandom.randReal());
+                sublist.add((float) JFMLRandom.getInstance().randReal());
             }
             result.add(sublist);
         }
@@ -73,11 +70,11 @@ public class ANFIS extends RegressionTrainer {
 
     private List<List<ImmutablePair<Float, Float>>> getInitialSecondLayerWeights(Integer nVar, List<Integer> nTermList) {
         List<List<ImmutablePair<Float, Float>>> result = new ArrayList<>();
-        for (int i = 0; i < nVar; i++) {
+        for (int i = 0; i < nVar-1; i++) {
             List<ImmutablePair<Float, Float>> weightsPerVariable = new ArrayList<>();
             for (int j = 0; j < nTermList.get(i); j++) {
-                Float a = JFMLRandom.randReal();
-                Float b = JFMLRandom.randReal();
+                Float a = JFMLRandom.getInstance().randReal();
+                Float b = JFMLRandom.getInstance().randReal();
                 weightsPerVariable.add(new ImmutablePair<>(a, b));
             }
             result.add(weightsPerVariable);

@@ -43,6 +43,6 @@ public class VariableMetricsComputerRegression extends VariableMetricsComputer<F
                 .map(error -> error*error)
                 .collect(Collectors.toList());
         Float reduced = squaredList.stream().reduce((x,y) -> x*y).get();
-        return (float) Math.pow(reduced, 1/n);
+        return (float) Math.pow(reduced, 1 / (float) n);
     }
 }

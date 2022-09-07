@@ -13,6 +13,7 @@ import jfmltrainer.task.rulebasetrainer.classification.chi.ChiWMBased;
 import jfmltrainer.task.rulebasetrainer.classification.furia.FURIA;
 import jfmltrainer.task.rulebasetrainer.regression.anfis.ANFIS;
 import jfmltrainer.task.rulebasetrainer.regression.ch.CordonHerrera;
+import jfmltrainer.task.rulebasetrainer.regression.cor.CORWM;
 import jfmltrainer.task.rulebasetrainer.regression.thrift.Thrift;
 import jfmltrainer.task.rulebasetrainer.regression.wm.WangMendel;
 import jfmltrainer.task.rulebasetrainer.tuning.Tuner;
@@ -29,7 +30,7 @@ public enum RuleBaseTrainerMethod {
     // REGRESSION
     WANG_MENDEL("WM", Problem.REGRESSION, new WangMendel(), null, AndOperatorPROD.getInstance(), null, ThenOperatorPROD.getInstance()),
     CORDON_HERRERA("CH", Problem.REGRESSION, new CordonHerrera(), null, AndOperatorMIN.getInstance(), null, ThenOperatorMIN.getInstance()),
-    COR_WEIGHTS("COR", Problem.REGRESSION, new CordonHerrera(), null, null, null, ThenOperatorMIN.getInstance()),
+    COR_WEIGHTS("COR", Problem.REGRESSION, new CORWM(), null, null, null, ThenOperatorMIN.getInstance()),
     THRIFT("Thrift", Problem.REGRESSION, new Thrift(), null, null, null, null),
     ANFIS("ANFIS", Problem.REGRESSION, new ANFIS(), null,null, null, null),
 

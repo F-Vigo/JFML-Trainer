@@ -1,5 +1,6 @@
 package jfmltrainer.aux;
 
+import jfml.jaxb.FuzzySystemType;
 import jfml.knowledgebase.KnowledgeBaseType;
 import jfml.knowledgebase.variable.FuzzyVariableType;
 import jfml.knowledgebase.variable.KnowledgeBaseVariable;
@@ -14,10 +15,12 @@ import jfmltrainer.operator.OperatorParser;
 import jfmltrainer.operator.and.AndOperatorParser;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.Marshaller;
+import javax.xml.namespace.QName;
+import java.io.FileOutputStream;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.ToDoubleFunction;
@@ -63,7 +66,7 @@ public class Utils {
     public static Float computeMSE(List<List<Float>> realValueList, List<List<Float>> predictedValueList) {
 
         TriFunction<List<Float>, Float, Float, List<Float>> normalize = (valueList, mean, std) -> valueList.stream()
-                .map(value -> (value - mean) / std)
+                .map(value -> (std != 0) ? ((value - mean) / std) : value)
                 .collect(Collectors.toList());
 
         Function<
@@ -198,7 +201,7 @@ public class Utils {
     }
 
     private static List<Float> evenlySpacedDiscretization(Float x0, Float xN, int N) {
-        Float h = xN-x0/N;
+        Float h = (xN-x0)/N;
         return IntStream.range(0, N+1)
                 .mapToObj(i -> x0+i*h)
                 .collect(Collectors.toList());
@@ -239,6 +242,31 @@ public class Utils {
         return mfValueList.stream()
                 .reduce(AndOperatorParser.getInstance().fromString(rule.getAndMethod()).get()::apply)
                 .get();
+    }
+
+    public static void exportFuzzySystem(ImmutablePair<KnowledgeBaseType, ? extends RuleBaseType> fuzzySystem, String outputFolder, String outputName) {
+        FuzzySystemType fuzzySystemType = new FuzzySystemType();
+        fuzzySystemType.setKnowledgeBase(fuzzySystem.getLeft());
+        fuzzySystemType.addRuleBase(fuzzySystem.getRight());
+        fuzzySystemType.setName(outputName);
+        writeToXML(fuzzySystemType, outputFolder, outputName);
+    }
+
+    private static void writeToXML(FuzzySystemType fuzzySystemType, String outputFolder, String outputName) {
+        String path = outputFolder + "/" + outputName + ".xml";
+        try {
+            JAXBContext context = JAXBContext.newInstance(FuzzySystemType.class);
+            Marshaller marshaller = context.createMarshaller();
+            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+            JAXBElement<FuzzySystemType> jaxbElement = new JAXBElement<FuzzySystemType>(
+                    new QName("", "fuzzySystem"),
+                    FuzzySystemType.class,
+                    fuzzySystemType
+            );
+            marshaller.marshal(jaxbElement, new FileOutputStream(path));
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
     }
 
 }

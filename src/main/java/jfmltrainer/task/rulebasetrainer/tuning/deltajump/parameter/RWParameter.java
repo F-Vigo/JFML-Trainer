@@ -13,8 +13,8 @@ public class RWParameter extends Parameter {
         this.maxPossibleValue = 1F;
     }
 
-    @Override
-    public Boolean tryToSetValue(Float value) {
+    //@Override
+    private Boolean tryToSetValue(Float value) {
         Boolean hasFallenIn = false;
 
         if (value < minPossibleValue) {
@@ -29,7 +29,7 @@ public class RWParameter extends Parameter {
 
     @Override
     public Boolean tryToSetValue(Float value, List<Parameter> parameterList, KnowledgeBaseType knowledgeBase) {
-        return null;
+        return tryToSetValue(value);
     }
 
     @Override

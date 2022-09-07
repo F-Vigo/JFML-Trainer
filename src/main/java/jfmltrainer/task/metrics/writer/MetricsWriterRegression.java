@@ -6,9 +6,9 @@ public class MetricsWriterRegression extends MetricsWriter<RegressionMeasures> {
 
     @Override
     protected void addVariableInfo(RegressionMeasures measures, StringBuffer stringBuffer) {
-        stringBuffer.append("MSE: " + measures.getMSE());
-        stringBuffer.append("RMSE: " + measures.getRMSE());
-        stringBuffer.append("MAE: " + measures.getMAE());
-        stringBuffer.append("GMSE: " + measures.getGMSE());
+        stringBuffer.append("MSE: " + measures.getMSE() + "\n");
+        stringBuffer.append("RMSE: " + measures.getRMSE() + "\n");
+        stringBuffer.append("MAE: " + measures.getMAE() + "\n");
+        stringBuffer.append("GMSE: " + measures.getGMSE() + "\n");
     }
 }

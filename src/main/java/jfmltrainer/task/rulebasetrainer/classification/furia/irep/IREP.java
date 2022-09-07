@@ -13,6 +13,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -67,7 +68,7 @@ public class IREP {
         Float minDL = Float.MAX_VALUE;
         Float newDL;
         ImmutablePair<List<BinaryIREPInstance>, List<BinaryIREPInstance>> growAndPruneListPair = splitInGrowAndPrune(instanceList, methodConfig);
-        List<BinaryIREPInstance> uncoveredInstanceList = null;
+        List<BinaryIREPInstance> uncoveredInstanceList = new ArrayList<>();
         Boolean keepLooping = true;
 
         while (keepLooping) {
@@ -79,7 +80,7 @@ public class IREP {
             possibleNewRuleSet.add(newRule);
             newDL = DLCalculator.getMDL(instanceList, possibleNewRuleSet, knowledgeBase);
 
-            if (newDL <= minDL + methodConfig.getSurplus().get()) {
+            if (newDL <= minDL + methodConfig.getSurplus()) {
                 ruleList = possibleNewRuleSet;
                 uncoveredInstanceList = IREPUtils.getUncoveredInstanceListByRule(uncoveredInstanceList, newRule, knowledgeBase);
                 if (newDL < minDL) {
@@ -108,7 +109,8 @@ public class IREP {
 
         int p = (int) instanceList.stream().filter(BinaryIREPInstance::getIsPositive).count();
         int n = (int) instanceList.stream().filter(binaryIREPInstance -> !binaryIREPInstance.getIsPositive()).count();
-        Float positiveTotalProportionLog2 = IREPUtils.log2(p / (p+n));
+        Float p_n = (p+n) > 0 ? (p / (p+n)) : 0F;
+        Float positiveTotalProportionLog2 = IREPUtils.log2(p_n);
 
         CrispRule bestRuleSoFar = new CrispRule(rule.getAntecedent(), rule.getConsequent());
         Boolean keepGrowing = unusedAttributePositionList.size() > 0 && p > 0 && n > 0;
@@ -137,7 +139,8 @@ public class IREP {
                             .collect(Collectors.toList());
                     int pRule = (int) candidateCoveredInstanceList.stream().filter(BinaryIREPInstance::getIsPositive).count();
                     int nRule = (int) candidateCoveredInstanceList.stream().filter(binaryIREPInstance -> !binaryIREPInstance.getIsPositive()).count();
-                    Float h = pRule * (IREPUtils.log2(pRule / (pRule+nRule)) - positiveTotalProportionLog2);
+                    Float pR_nR = (pRule+nRule > 0) ? pRule / (pRule + nRule) : 0F;
+                    Float h = pRule * (IREPUtils.log2(pR_nR) - positiveTotalProportionLog2);
                     if (h > bestH) {
                         bestH = h;
                         bestCrispClauseSoFar = newCrispClause;
@@ -170,7 +173,10 @@ public class IREP {
         List<CrispRule> otherRuleList = ruleList.stream()
                 .filter(rule -> !rule.equals(currentRule))
                 .collect(Collectors.toList());
-        growAndPruneListPair.setValue(IREPUtils.getUncoveredInstanceList(growAndPruneListPair.getValue(), otherRuleList, knowledgeBase));
+        growAndPruneListPair = new ImmutablePair<>(
+                growAndPruneListPair.getLeft(),
+                IREPUtils.getUncoveredInstanceList(growAndPruneListPair.getValue(), otherRuleList, knowledgeBase)
+        );
 
         CrispRule revisionRule = growRule(growAndPruneListPair.getLeft(), knowledgeBase);
         revisionRule = pruneRule(growAndPruneListPair.getRight(), revisionRule, knowledgeBase);
@@ -220,7 +226,10 @@ public class IREP {
         Boolean keepLooping = true;
         while(keepLooping) {
             hOld = hNew;
-            CrispRule initRule = new CrispRule(pruningRule.getAntecedent().subList(0, pruningRule.getAntecedent().size()-1), pruningRule.getConsequent());
+            CrispRule initRule = new CrispRule(
+                    pruningRule.getAntecedent().subList(0, Math.max(0, pruningRule.getAntecedent().size()-1)),
+                    pruningRule.getConsequent()
+            );
             List<BinaryIREPInstance> coveredByInitList = coveredInstanceList.stream()
                     .filter(instance -> IREPUtils.covers(initRule, instance.getInstance(), knowledgeBase))
                     .collect(Collectors.toList());
@@ -260,7 +269,7 @@ public class IREP {
     private ImmutablePair<List<BinaryIREPInstance>, List<BinaryIREPInstance>> splitInGrowAndPrune(List<BinaryIREPInstance> instanceList, MethodConfig methodConfig) {
 
         Integer size = instanceList.size();
-        Integer border = Math.round(methodConfig.getGrowProportion().get() * size);
+        Integer border = Math.round(methodConfig.getGrowProportion() * size);
 
         List<Integer> positions = IntStream.range(0, size).boxed().collect(Collectors.toList());
         List<Integer> shuffledPositions = JFMLRandom.shuffle(positions);
@@ -285,6 +294,7 @@ public class IREP {
                 .filter(KnowledgeBaseVariable::isInput)
                 .count();
         List<String> varUsedNameList = rule.getAntecedent().stream()
+                .filter(Objects::nonNull)
                 .map(CrispClause::getVarName)
                 .collect(Collectors.toList());
         List<Boolean> unusedAttributes = IntStream.range(0, antecedentSize).boxed()

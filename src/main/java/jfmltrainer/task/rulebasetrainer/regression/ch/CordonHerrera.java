@@ -8,6 +8,7 @@ import jfmltrainer.data.Data;
 import jfmltrainer.data.instance.Instance;
 import jfmltrainer.operator.and.AndOperator;
 import jfmltrainer.operator.rvf.RVFOperator;
+import jfmltrainer.operator.rvf.RVFOperatorMAX;
 import jfmltrainer.operator.then.ThenOperator;
 import jfmltrainer.task.rulebasetrainer.MethodConfig;
 import jfmltrainer.task.rulebasetrainer.RuleBaseTrainerUtils;
@@ -30,7 +31,7 @@ public class CordonHerrera extends RegressionTrainer {
     public ImmutablePair<KnowledgeBaseType, RuleBaseType> trainRuleBase(Data data, KnowledgeBaseType knowledgeBase, MethodConfig methodConfig) {
         List<ImmutablePair<List<Instance>, FuzzyRuleType>> candidateRuleList = CordonHerreraUtils.generateCHCandidateRuleList(data, knowledgeBase);
         List<RuleWithRVF> ruleWithRVFList = candidateRuleList.stream()
-                .map(instanceListAndRule -> enrichWithRVF(instanceListAndRule, knowledgeBase, methodConfig.getAndOperator(), methodConfig.getThenOperator(), methodConfig.getRvfOperator().get()))
+                .map(instanceListAndRule -> enrichWithRVF(instanceListAndRule, knowledgeBase, methodConfig.getAndOperator(), methodConfig.getThenOperator(), methodConfig.getRvfOperator()))
                 .collect(Collectors.toList());
         List<FuzzyRuleType> prunedRuleList = prune(ruleWithRVFList);
         RuleBaseType ruleBase = RuleBaseTrainerUtils.buildRuleBase(prunedRuleList);

@@ -24,7 +24,6 @@ public abstract class FRBSParser<T> implements FileParser<T> {
         JAXBContext content = getContent();
         Unmarshaller unmarshaller = content.createUnmarshaller();
         Object object = unmarshaller.unmarshal(new File(filePath));
-        // TODO - Printing if asked
         return (T) object;
     }
 

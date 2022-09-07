@@ -17,10 +17,13 @@ public class Matrix {
     List<List<Float>> elems;
 
     Matrix(Integer m, Integer n) {
-        this.elems = new ArrayList<>(m);
+        this.elems = new ArrayList<>();
         for (int i = 0; i < m; i++) {
-            elems.set(i, new ArrayList<>(n));
-            Collections.fill(elems.get(i), 0F);
+            List<Float> row = new ArrayList<>();
+            for (int j = 0; j < n; j++) {
+                row.add(0F);
+            }
+            elems.add(row);
         }
     }
 

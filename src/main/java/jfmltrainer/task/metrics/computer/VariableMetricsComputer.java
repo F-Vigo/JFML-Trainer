@@ -49,6 +49,6 @@ public abstract class VariableMetricsComputer<T> {
     }
 
     private List<T> predictInstance(FuzzyInferenceSystem frbs, Instance instance) {
-        return Utils.predict(instance, ((RuleBaseType) frbs.getRuleBase().get(0)));
+        return Utils.predict(instance, ((RuleBaseType) frbs.getRuleBase(0)));
     }
 }

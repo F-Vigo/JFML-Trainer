@@ -27,14 +27,14 @@ public class DeltaJump extends Tuner {
     // MAIN FUNCTIONS //
 
     @Override
-    public ImmutablePair<KnowledgeBaseType, RuleBaseType> tune(Data data, KnowledgeBaseType knowledgeBase, RuleBaseType ruleBase, MethodConfig methodConfig) {
+    public ImmutablePair<KnowledgeBaseType, RuleBaseType> tuneFRBS(Data data, KnowledgeBaseType knowledgeBase, RuleBaseType ruleBase, MethodConfig methodConfig) {
         List<Parameter> optimizedParameterList = optimize(data, knowledgeBase, ruleBase, methodConfig);
         return buildFIS(knowledgeBase, ruleBase, optimizedParameterList);
     }
 
     private List<Parameter> optimize(Data data, KnowledgeBaseType knowledgeBase, RuleBaseType ruleBase, MethodConfig methodConfig) {
         List<Parameter> parameterList = initialParameterList(knowledgeBase, ruleBase);
-        for (int i = 0; i < methodConfig.getMaxIter().get(); i++) {
+        for (int i = 0; i < methodConfig.getMaxIter(); i++) {
             parameterList = optimizeIteration(data, parameterList, knowledgeBase, ruleBase, methodConfig);
         }
         return parameterList;
@@ -73,6 +73,23 @@ public class DeltaJump extends Tuner {
         return result;
     }
 
+    private int getParamIndexWithinTerm(KnowledgeBaseType knowledgeBase, Integer varIndex, Integer termIndex, Integer paramIndex) {
+
+        int accum = 0;
+
+        for (int i = 0; i < varIndex; i++) {
+            accum += knowledgeBase.getKnowledgeBaseVariables().get(i).getTerms().stream()
+                    .map(term -> ((FuzzyTermType) term).getParam().length)
+                    .reduce(Integer::sum).get();
+        }
+
+        for (int i = 0; i < termIndex; i++) {
+            accum += ((FuzzyTermType) knowledgeBase.getKnowledgeBaseVariables().get(varIndex).getTerms().get(i)).getParam().length;
+        }
+
+        return paramIndex - accum;
+    }
+
 
     private List<RWParameter> initialRuleWeightParameterList(RuleBaseType ruleBase) {
         return ruleBase.getRules().stream()
@@ -88,42 +105,42 @@ public class DeltaJump extends Tuner {
         List<Parameter> result = new ArrayList<>();
         result.addAll(parameterList);
         IntStream.range(0, parameterList.size()).boxed()
-                .forEach(i -> result.set(i, optimizeParameter(data, result.get(i), knowledgeBase, ruleBase, methodConfig, i)));
+                .forEach(i -> result.set(i, optimizeParameter(data, result.get(i), parameterList, knowledgeBase, ruleBase, methodConfig, i, true)));
         return result;
     }
 
-    private Parameter optimizeParameter(Data data, Parameter parameter, KnowledgeBaseType knowledgeBase, RuleBaseType ruleBase, MethodConfig methodConfig, int parameterIndex) {
+    private Parameter optimizeParameter(Data data, Parameter parameter, List<Parameter> parameterList, KnowledgeBaseType knowledgeBase, RuleBaseType ruleBase, MethodConfig methodConfig, int parameterIndex, Boolean isFromParamList) {
         Float errorOld = errorFunction(data, ruleBase);
-        Float jump = estimateJump(data, parameter, errorOld, ruleBase);
+        Float jump = estimateJump(data, parameter, errorOld, parameterList, knowledgeBase, ruleBase);
         Boolean canJump = jump == 0;
         Parameter newParameter = parameter instanceof MFParameter
-                ? new MFParameter(knowledgeBase, ((MFParameter) parameter).getVarIndex(), ((MFParameter) parameter).getTermIndex(), parameterIndex)
+                ? new MFParameter(knowledgeBase, ((MFParameter) parameter).getVarIndex(), ((MFParameter) parameter).getTermIndex(), isFromParamList ? getParamIndexWithinTerm(knowledgeBase, ((MFParameter) parameter).getVarIndex(), ((MFParameter) parameter).getTermIndex(), parameterIndex) : parameterIndex)
                 : new RWParameter(parameter.getValue());
         if (canJump) {
-            newParameter.setValue(doJump(data, parameter, jump, errorOld, ruleBase, methodConfig));
+            newParameter.setValue(doJump(data, parameter, jump, errorOld, parameterList, knowledgeBase, ruleBase, methodConfig));
         }
         return newParameter;
     }
 
 
-    private Float estimateJump(Data data, Parameter parameter, Float errorOld, RuleBaseType ruleBase) {
+    private Float estimateJump(Data data, Parameter parameter, Float errorOld, List<Parameter> parameterList, KnowledgeBaseType knowledgeBase, RuleBaseType ruleBase) {
         Float epsilon = parameter.getEpsilon();
         Float value = parameter.getValue();
         Float errorNew = null;
 
-        Boolean setPlus = parameter.tryToSetValue(value + epsilon);
+        Boolean setPlus = parameter.tryToSetValue(value + epsilon, parameterList, knowledgeBase);
         if (setPlus) {
             errorNew = errorFunction(data, ruleBase);
-            parameter.tryToSetValue(value);
+            parameter.tryToSetValue(value, parameterList, knowledgeBase);
             if (errorNew < errorOld) {
                 return epsilon;
             }
         }
 
-        Boolean setMinus = parameter.tryToSetValue(value - epsilon);
+        Boolean setMinus = parameter.tryToSetValue(value - epsilon, parameterList, knowledgeBase);
         if (setMinus) {
             errorNew = errorFunction(data, ruleBase);
-            parameter.tryToSetValue(value);
+            parameter.tryToSetValue(value, parameterList, knowledgeBase);
             if (errorNew < errorOld) {
                 return -epsilon;
             }
@@ -134,7 +151,7 @@ public class DeltaJump extends Tuner {
 
 
 
-    private Float doJump(Data data, Parameter parameter, Float jump, Float errorOld, RuleBaseType ruleBase, MethodConfig methodConfig) {
+    private Float doJump(Data data, Parameter parameter, Float jump, Float errorOld, List<Parameter> parameterList, KnowledgeBaseType knowledgeBase, RuleBaseType ruleBase, MethodConfig methodConfig) {
 
         Float originalValue = parameter.getValue();
         Float alpha = 1F; // Initial value
@@ -142,8 +159,8 @@ public class DeltaJump extends Tuner {
         Float bestAlphaError = errorOld;
 
         Boolean keepLooping = true;
-        for (int lineIterIndex = 0; lineIterIndex < methodConfig.getMaxIter().get() && keepLooping; lineIterIndex++) {
-            Boolean set = parameter.tryToSetValue(originalValue + jump * alpha);
+        for (int lineIterIndex = 0; lineIterIndex < methodConfig.getMaxIter() && keepLooping; lineIterIndex++) {
+            Boolean set = parameter.tryToSetValue(originalValue + jump * alpha, parameterList, knowledgeBase);
             if (set) {
                 Float error = errorFunction(data, ruleBase);
                 Float errorIncrement = error - errorOld;

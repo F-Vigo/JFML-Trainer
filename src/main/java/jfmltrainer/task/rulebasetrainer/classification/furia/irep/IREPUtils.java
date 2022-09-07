@@ -15,7 +15,10 @@ import java.util.stream.IntStream;
 public class IREPUtils {
 
     public static <T extends Number> Float log2(T x) {
-        return (float) (Math.log((Double) x) / Math.log(2));
+        Float xF = Float.parseFloat(x.toString());
+        return xF > 0F
+                ? (float) (Math.log(xF) / Math.log(2))
+                : 0F;
     }
 
     public static List<BinaryIREPInstance> getUncoveredInstanceList(List<BinaryIREPInstance> instanceList, List<CrispRule> ruleList, KnowledgeBaseType knowledgeBase) {
@@ -33,6 +36,10 @@ public class IREPUtils {
     }
 
     public static boolean covers(CrispRule crispRule, ClassificationInstance instance, KnowledgeBaseType knowledgeBase) {
+
+        if (crispRule.getAntecedent().isEmpty())
+            return false;
+
         Boolean keepLooping = true;
         Boolean soFarSoGood = true;
         int i = 0;

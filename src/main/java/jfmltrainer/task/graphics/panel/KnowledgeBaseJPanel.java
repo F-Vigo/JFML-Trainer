@@ -3,6 +3,13 @@ package jfmltrainer.task.graphics.panel;
 import jfml.knowledgebase.KnowledgeBaseType;
 import jfml.knowledgebase.variable.FuzzyVariableType;
 import jfml.knowledgebase.variable.KnowledgeBaseVariable;
+import jfml.membershipfunction.CircularDefinitionType;
+import jfml.membershipfunction.CustomShapeType;
+import jfml.membershipfunction.PointSetShapeType;
+import jfml.parameter.FourParamType;
+import jfml.parameter.OneParamType;
+import jfml.parameter.ThreeParamType;
+import jfml.parameter.TwoParamType;
 import jfml.term.FuzzyTermType;
 import jfmltrainer.task.graphics.GraphicalConstants;
 
@@ -37,7 +44,20 @@ public class KnowledgeBaseJPanel extends JFMLTrainerJPanel<KnowledgeBaseType> {
     private void paintVariable(Graphics2D g, KnowledgeBaseVariable oldVar, Optional<KnowledgeBaseVariable> newVar, int i) {
         String fullVarName = getFullVarName(oldVar, i);
         g.drawString(fullVarName, GraphicalConstants.MARGIN, 2*GraphicalConstants.MARGIN + i*GraphicalConstants.KNOWLEDGE_BLOCK_HEIGHT);
-        paintVariableTermList(g, oldVar, newVar, i);
+        if (isSingleton(oldVar)) {
+            Integer width = (int) Math.floor(GraphicalConstants.KNOWLEDGE_BLOCK_WIDTH * 0.8);
+            Integer height = (int) Math.floor(GraphicalConstants.KNOWLEDGE_BLOCK_HEIGHT * 0.8);
+            Integer paddingH = (GraphicalConstants.KNOWLEDGE_BLOCK_WIDTH  - width) / 2;
+            Integer left = GraphicalConstants.MARGIN + GraphicalConstants.KNOWLEDGE_BLOCK_WIDTH + paddingH - 10;
+            Integer top = 2*GraphicalConstants.MARGIN + i*GraphicalConstants.KNOWLEDGE_BLOCK_HEIGHT;
+            Function<Float, Integer> mfValueToRow = mfValue -> (int) Math.floor(mfValue*height);
+            Function<Integer, Integer> columnToPixelX = column -> left + column;
+            Function<Integer, Integer> rowToPixelY = row -> top - row;
+
+            paintSingleton(g, oldVar, width, mfValueToRow, columnToPixelX, rowToPixelY);
+        } else {
+            paintVariableTermList(g, oldVar, newVar, i);
+        }
     }
 
     private void paintVariableTermList(Graphics2D g, KnowledgeBaseVariable oldVar, Optional<KnowledgeBaseVariable> newVar, int i) {
@@ -84,10 +104,53 @@ public class KnowledgeBaseJPanel extends JFMLTrainerJPanel<KnowledgeBaseType> {
         }
     }
 
+    private void paintSingleton(Graphics2D g, KnowledgeBaseVariable variable, Integer width, Function<Float, Integer> mfValueToRow, Function<Integer, Integer> columnToPixelX, Function<Integer, Integer> rowToPixelY) {
+
+        Integer n = variable.getTerms().size();
+        Float h = width / (float) (n-1);
+
+        g.drawLine(
+                columnToPixelX.apply(0),
+                rowToPixelY.apply(mfValueToRow.apply(0F)),
+                columnToPixelX.apply(width),
+                rowToPixelY.apply(mfValueToRow.apply(0F))
+        );
+
+        for (int i = 0; i < n; i++) {
+            Integer column = (int) (i*h);
+            g.drawLine(
+                    columnToPixelX.apply(column),
+                    rowToPixelY.apply(mfValueToRow.apply(0F)),
+                    columnToPixelX.apply(column),
+                    rowToPixelY.apply(mfValueToRow.apply(1F))
+            );
+        }
+    }
+
+
 
     private String getFullVarName(KnowledgeBaseVariable variable, int i) {
         return variable.isInput()
                 ? variable.getName() + " (X" + (i+1) + ")"
                 : variable.getName() + " (Y)";
+    }
+
+
+
+    private Boolean isSingleton(KnowledgeBaseVariable variable) {
+        FuzzyTermType term = (FuzzyTermType) variable.getTerms().get(0);
+        return term.getRightLinearShape() == null
+                && term.getLeftLinearShape() == null
+                && term.getPiShape() == null
+                && term.getTriangularShape() == null
+                && term.getGaussianShape() == null
+                && term.getRightGaussianShape() == null
+                && term.getLeftGaussianShape() == null
+                && term.getTrapezoidShape() == null
+                && term.getRectangularShape() == null
+                && term.getZShape() == null
+                && term.getSShape() == null
+                && term.getPointSetShape() == null
+                && term.getCircularDefinition() == null;
     }
 }

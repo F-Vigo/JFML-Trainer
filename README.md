@@ -50,6 +50,14 @@ where isQuantitative is 0.
 
 If no such file is provided, the program will need to infer the variable specifications from a data set. The granularity must be specified via a separate argument, either as a list (as long as the number of variables) or as a single value, or omitted for default.
 
+The data set is meant to ve provided via a txt file with a row per instance matching the following pattern:
+
+````
+x1.x2,...,xN;y1,...,yM
+````
+
+The different `x_i` are supposed to be floats, whereas `y_j` may be a float or a string.
+
 The result of the execution of this task is an XML file following the FML syntax with the KB information.
 
 

@@ -33,10 +33,12 @@ public class LateralDisplacementWithoutSelection extends LateralSelectionVariant
     @Override
     protected ImmutablePair<List<Boolean>, List<Boolean>> crossoverSelectedRuleList(Chromosome parent1, Chromosome parent2) {
         Integer n = parent1.getSelectedRuleList().size();
-        List<Boolean> selectedRuleList1 = new ArrayList<>(n);
-        List<Boolean> selectedRuleList2 = new ArrayList<>(n);
-        Collections.fill(selectedRuleList1, true);
-        Collections.fill(selectedRuleList2, true);
+        List<Boolean> selectedRuleList1 = new ArrayList<>();
+        List<Boolean> selectedRuleList2 = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            selectedRuleList1.add(true);
+            selectedRuleList2.add(true);
+        }
         return new ImmutablePair<>(selectedRuleList1, selectedRuleList2);
     }
 

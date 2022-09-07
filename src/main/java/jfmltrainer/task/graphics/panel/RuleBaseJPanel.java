@@ -139,7 +139,7 @@ public class RuleBaseJPanel extends JFMLTrainerJPanel<RuleBaseType> {
         int topRect = top-GraphicalConstants.RULE_BLOCK_HEIGHT + (int) (Math.floor(0.5 * GraphicalConstants.RULE_BLOCK_HEIGHT));
         int rectSide = 10;
         g.drawRect(leftRect, topRect, rectSide, rectSide);
-        int luminosity = (int) Math.floor((1-oldRule.getWeight()) * 255);
+        int luminosity = (int) Math.floor((1-(oneBase ? oldRule : newRule.get()).getWeight()) * 255);
         g.setColor(new Color(luminosity, luminosity, luminosity));
         g.fillRect(leftRect, topRect, rectSide, rectSide);
         g.setColor(Color.BLACK);

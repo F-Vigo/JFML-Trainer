@@ -15,7 +15,7 @@ public class MetricsWriterClassification extends MetricsWriter<ClassificationMea
 
     private void addHeader(StringBuffer stringBuffer) {
         stringBuffer.append(String.format(
-                "%10s | %10s | %10s | %10s | %10s | %10s",
+                "%10s | %10s | %10s | %10s | %10s | %10s \n",
                 "Positive",
                 "Accuracy",
                 "Precision",
@@ -27,7 +27,7 @@ public class MetricsWriterClassification extends MetricsWriter<ClassificationMea
 
     private void addRow(ClassificationMeasures measures, int i, StringBuffer stringBuffer) {
         stringBuffer.append(String.format(
-                "%10s | %10d | %10d | %10d | %10d | %10d",
+                "%10s | %10d | %10d | %10d | %10d | %10d \n",
                 measures.getAccuracyList().get(0).getPositiveClassName(),
                 measures.getPrecisionList().get(0).getValue(),
                 measures.getSensitivityList().get(0).getValue(),

@@ -16,10 +16,14 @@ public class AnfisUtils {
     }
 
     public static List<List<Integer>> getCombinationList(List<Integer> nTermList) {
-        List<Integer> initialCombination = new ArrayList<>(nTermList.size());
-        Collections.fill(initialCombination, 0);
+        List<Integer> initialCombination = new ArrayList<>();
+        for (int i = 0; i < nTermList.size(); i++) {
+            initialCombination.add(0);
+        }
         List<Integer> finalElem = nTermList.stream().map(x -> x-1).collect(Collectors.toList());
-        return getCombinationListAux(finalElem, Collections.singletonList(initialCombination));
+        List<List<Integer>> accum = new ArrayList<>();
+        accum.add(initialCombination);
+        return getCombinationListAux(finalElem, accum);
     }
 
     private static List<List<Integer>> getCombinationListAux(List<Integer> finalElem, List<List<Integer>> accum) {
@@ -37,7 +41,7 @@ public class AnfisUtils {
     }
 
     private static List<Integer> nextItemAux(List<Integer> finalElem, List<Integer> last, int k) {
-        if (last.get(k) == finalElem.get(k)) {
+        if (last.get(k) != finalElem.get(k)) {
             List<Integer> newItem = new ArrayList<>();
             for (int i = 0; i < k; i++) newItem.add(last.get(i));
             newItem.add(last.get(k)+1);

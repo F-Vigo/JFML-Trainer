@@ -23,6 +23,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -79,14 +80,17 @@ public class FURIA extends ClassificationTrainer {
         FuriaClauseAndPurity bestSoFar = new FuriaClauseAndPurity(null, null, Float.MIN_VALUE);
 
         for (CrispClause crispClause : availableNumericAntecedentList) {
-            FuriaClauseAndPurity newCandidate = fuzzifyAntecedent(instanceList, crispClause, knowledgeBase, crispClause.getVarName());
-            if (newCandidate.getPurity() > bestSoFar.getPurity()) {
-                bestSoFar = newCandidate;
+            if (crispClause != null) {
+                FuriaClauseAndPurity newCandidate = fuzzifyAntecedent(instanceList, crispClause, knowledgeBase, crispClause.getVarName());
+                if (newCandidate.getPurity() > bestSoFar.getPurity()) {
+                    bestSoFar = newCandidate;
+                }
             }
         }
         accum.add(bestSoFar);
         FuriaClauseAndPurity finalBestSoFar = bestSoFar;
         List<CrispClause> newAvailableNumericAntecedentList = availableNumericAntecedentList.stream()
+                .filter(Objects::nonNull)
                 .filter(antecedent -> !antecedent.getVarName().equals(finalBestSoFar.getVarName())
                         || finalBestSoFar.getTrapezoid().getMembershipValue(antecedent.getValue()) > 0)
                 .collect(Collectors.toList());

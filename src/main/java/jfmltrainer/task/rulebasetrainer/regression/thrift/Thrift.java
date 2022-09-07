@@ -22,8 +22,6 @@ public class Thrift extends RegressionTrainer {
 
     private static Evaluator evaluator = new Evaluator();
 
-    private JFMLRandom JFMLRandom = jfmltrainer.aux.JFMLRandom.getInstance();
-
     @Override
     public ImmutablePair<KnowledgeBaseType, RuleBaseType> trainRuleBase(Data<RegressionInstance> data, KnowledgeBaseType knowledgeBase, MethodConfig methodConfig) {
         List<FuzzyRuleType> ruleList = geneticAlgorithm(data, knowledgeBase, methodConfig);
@@ -32,7 +30,7 @@ public class Thrift extends RegressionTrainer {
 
     private List<FuzzyRuleType> geneticAlgorithm(Data<RegressionInstance> data, KnowledgeBaseType knowledgeBase, MethodConfig methodConfig) {
         List<Chromosome> population = getInitialPopulation(data, knowledgeBase, methodConfig);
-        for (int i = 0; i < methodConfig.getMaxIter().get(); i++) {
+        for (int i = 0; i < methodConfig.getMaxIter(); i++) {
             population = nextGeneration(population, data, knowledgeBase, methodConfig);
         }
         List<List<FuzzyTermType>> splitTermList = decodeChromosome(population.get(0), knowledgeBase); // The first element is the best
@@ -48,7 +46,7 @@ public class Thrift extends RegressionTrainer {
 
     private List<Chromosome> getInitialPopulation(Data<RegressionInstance> data, KnowledgeBaseType knowledgeBase, MethodConfig methodConfig) {
         List<Chromosome> population = new ArrayList<>();
-        for (int i = 0; i < methodConfig.getPopulationSize().get(); i++) {
+        for (int i = 0; i < methodConfig.getPopulationSize(); i++) {
             List<Optional<FuzzyTermType>> geneList = getRandomGeneList(getNGenes(knowledgeBase), knowledgeBase, methodConfig).stream()
                     .map(Optional::ofNullable)
                     .collect(Collectors.toList());
@@ -81,7 +79,7 @@ public class Thrift extends RegressionTrainer {
 
     private FuzzyTermType getRandomTerm(KnowledgeBaseVariable variable) {
         Integer termListSize = variable.getTerms().size();
-        Integer termPos = JFMLRandom.randInt(termListSize);
+        Integer termPos = JFMLRandom.getInstance().randInt(termListSize);
         return (FuzzyTermType) (variable.getTerms().get(termPos));
     }
 
@@ -93,7 +91,7 @@ public class Thrift extends RegressionTrainer {
         List<ImmutablePair<Chromosome, Chromosome>> parentList = getParentList(population, methodConfig);
         List<Chromosome> offspringList = getOffspring(parentList, data, knowledgeBase, methodConfig);
         List<Chromosome> nextGeneration = combineGenerations(population, offspringList, methodConfig);
-        if (methodConfig.getMutationProb().get() > 0) {
+        if (methodConfig.getMutationProb() > 0) {
             nextGeneration = mutate(nextGeneration, data, knowledgeBase, methodConfig);
         }
         return nextGeneration;
@@ -107,9 +105,9 @@ public class Thrift extends RegressionTrainer {
                 .reduce(Float::sum)
                 .get();
         List<ImmutablePair<Chromosome, Chromosome>> parentList = new ArrayList<>();
-        for (int i = 0; i < methodConfig.getPopulationSize().get() / 2; i++) {
-            Integer pickedPosition1 = pickParentPosition(JFMLRandom.randReal(), fitnessList, totalProb);
-            Integer pickedPosition2 = pickParentPosition(JFMLRandom.randReal(), fitnessList, totalProb);
+        for (int i = 0; i < methodConfig.getPopulationSize() / 2; i++) {
+            Integer pickedPosition1 = pickParentPosition(JFMLRandom.getInstance().randReal(), fitnessList, totalProb);
+            Integer pickedPosition2 = pickParentPosition(JFMLRandom.getInstance().randReal(), fitnessList, totalProb);
             parentList.add(new ImmutablePair<>(population.get(pickedPosition1), population.get(pickedPosition2)));
         }
         return parentList;
@@ -166,14 +164,14 @@ public class Thrift extends RegressionTrainer {
         return nextGeneration.stream()
                 .sorted(increasingComparator.reversed())
                 .collect(Collectors.toList())
-                .subList(0, methodConfig.getPopulationSize().get());
+                .subList(0, methodConfig.getPopulationSize());
     }
 
     private List<Chromosome> mutate(List<Chromosome> nextGeneration, Data<RegressionInstance> data, KnowledgeBaseType knowledgeBase, MethodConfig methodConfig) {
 
-        int muNext = (int) Math.ceil(Math.log(JFMLRandom.randReal()) / Math.log(1.0 - methodConfig.getMutationProb().get()));
+        int muNext = (int) Math.ceil(Math.log(JFMLRandom.getInstance().randReal()) / Math.log(1.0 - methodConfig.getMutationProb()));
         int nGenes = nextGeneration.get(0).getGeneList().size();
-        int allPositions = methodConfig.getPopulationSize().get() * nGenes;
+        int allPositions = methodConfig.getPopulationSize() * nGenes;
 
         while (muNext < allPositions) {
             int chromosomeIndex = muNext / nGenes;
@@ -187,7 +185,7 @@ public class Thrift extends RegressionTrainer {
             Float fitness = (float) evaluator.evaluate(data, decodeChromosome(newChromosome, knowledgeBase), knowledgeBase, methodConfig);
             newChromosome.setFitness(fitness);
             nextGeneration.set(chromosomeIndex, newChromosome);
-            muNext += (int) Math.ceil(Math.log(JFMLRandom.randReal()) / Math.log(1.0 - methodConfig.getMutationProb().get()));
+            muNext += (int) Math.ceil(Math.log(JFMLRandom.getInstance().randReal()) / Math.log(1.0 - methodConfig.getMutationProb()));
         }
         return nextGeneration;
     }
@@ -197,7 +195,7 @@ public class Thrift extends RegressionTrainer {
         Integer newGenePos = null;
 
         if (oldGene.isEmpty()) {
-            newGenePos = JFMLRandom.randInt(outputTermList.size());
+            newGenePos = JFMLRandom.getInstance().randInt(outputTermList.size());
         } else {
             Integer termPos = IntStream.range(0, outputTermList.size()).boxed()
                     .filter(i -> outputTermList.get(i).getName().equals(oldGene.get().getName()))
@@ -206,7 +204,7 @@ public class Thrift extends RegressionTrainer {
                 newGenePos = 1;
             } else if (termPos == outputTermList.size() - 1) {
                 newGenePos = outputTermList.size() - 2;
-            } else if (JFMLRandom.randReal() < 0.5) {
+            } else if (JFMLRandom.getInstance().randReal() < 0.5) {
                 newGenePos = termPos - 1;
             } else {
                 newGenePos = termPos + 1;
@@ -241,9 +239,13 @@ public class Thrift extends RegressionTrainer {
 
     private List<List<Integer>> getAuxList(KnowledgeBaseType knowledgeBase) {
         Integer antecedentSize = (int) knowledgeBase.getKnowledgeBaseVariables().stream().filter(KnowledgeBaseVariable::isInput).count();
-        List<Integer> first = new ArrayList<>(antecedentSize);
-        Collections.fill(first, 0);
-        return getAuxListAux(Collections.singletonList(first), knowledgeBase);
+        List<Integer> first = new ArrayList<>();
+        for (int i = 0; i < antecedentSize; i++) {
+            first.add(0);
+        }
+        List<List<Integer>> accum = new ArrayList<>();
+        accum.add(first);
+        return getAuxListAux(accum, knowledgeBase);
     }
 
     private List<List<Integer>> getAuxListAux(List<List<Integer>> accum, KnowledgeBaseType knowledgeBase) {

@@ -29,6 +29,10 @@ public class GrayCoder {
         for (int i = 0; i < bitsgene; i++) {
             int aux = inputList.get(i) != last ? 1 : 0;
             char newChar = (char)('0'+aux);
+            int outputSizeSoFar = outputList.size();
+            for (int j = outputSizeSoFar; j <= pos+i; j++) {
+                outputList.add(null);
+            }
             outputList.set(pos+i, newChar);
             last = inputList.get(i);
         }
@@ -37,10 +41,10 @@ public class GrayCoder {
 
     private List<Character> intToCharList(int n0) {
         int n = n0;
-        List<Character> charList = new ArrayList<>(bitsgene);
+        List<Character> charList = new ArrayList<>();
         for (int i = bitsgene -1; i >= 0; i--) {
             char newChar = (char) ('0' + (n & 1));
-            charList.set(i, newChar);
+            charList.add(newChar);
             n >>= 1;
         }
         return charList;

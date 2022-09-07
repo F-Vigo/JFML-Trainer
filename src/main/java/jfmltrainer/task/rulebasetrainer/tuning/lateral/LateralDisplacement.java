@@ -22,8 +22,8 @@ public abstract class LateralDisplacement {
     protected LateralSelectionVariant lateralSelectionVariant;
 
     public ImmutablePair<KnowledgeBaseType, RuleBaseType> tune(Data data, KnowledgeBaseType knowledgeBase, RuleBaseType ruleBase, MethodConfig methodConfig) {
-        this.grayCoder = new GrayCoder(methodConfig.getBitsgene().get());
-        Chromosome chromosome = CHC(data, ruleBase, methodConfig.getPopulationSize().get(), methodConfig, lateralApproach.getNGenes(knowledgeBase, ruleBase));
+        this.grayCoder = new GrayCoder(methodConfig.getBitsgene());
+        Chromosome chromosome = CHC(data, ruleBase, methodConfig.getPopulationSize(), methodConfig, lateralApproach.getNGenes(knowledgeBase, ruleBase));
         return buildApproximativeKnowledgeAndRuleBases(knowledgeBase, ruleBase, chromosome);
     }
 
@@ -32,15 +32,23 @@ public abstract class LateralDisplacement {
         Function<Chromosome, Float> evaluation = chromosome -> (float) lateralApproach.getEvaluator().evaluate(data, ruleBase, chromosome, methodConfig);
 
         Integer nRules = ruleBase.getRules().size();
-        List<Boolean> isSelectedList = new ArrayList<>(ruleBase.getRules().size());
-        Collections.fill(isSelectedList, true);
+        List<Boolean> isSelectedList = new ArrayList<>();
+        for (int i = 0; i < ruleBase.getRules().size(); i++) {
+            isSelectedList.add(true);
+        }
+
+        List<Float> geneList = new ArrayList<>();
+        for (int i = 0; i < nGenes; i++) {
+            geneList.add(0F);
+        }
+        Chromosome initialChromosome = new Chromosome(geneList, isSelectedList);
         
         ImmutablePair<List<Chromosome>, Boolean> populationAndNewIndividuals = new ImmutablePair<>(
-                restartPopulation(new Chromosome(new ArrayList<>(nGenes), isSelectedList), populationSize, nRules),
+                restartPopulation(initialChromosome, populationSize, nRules),
                 false
         );
 
-        Float L = (float) (nGenes * methodConfig.getBitsgene().get() / 4);
+        Float L = (float) (nGenes * methodConfig.getBitsgene() / 4);
         Boolean keepLooping = true;
         Integer i = 0;
         Chromosome bestSoFar = Utils.argMax(
@@ -68,7 +76,7 @@ public abstract class LateralDisplacement {
                         evaluation::apply
                 );
             }
-            if (i.equals(methodConfig.getMaxIter().get())) {
+            if (i.equals(methodConfig.getMaxIter())) {
                 keepLooping = false;
             }
         }
@@ -173,7 +181,7 @@ public abstract class LateralDisplacement {
             geneList.add(getRandom());
         }
         
-        List<Boolean> ruleSelectedList = new ArrayList<>(nRules);
+        List<Boolean> ruleSelectedList = new ArrayList<>();
         for (int i = 0; i < nRules; i++) {
             ruleSelectedList.add(lateralSelectionVariant.getSelected());
         }
