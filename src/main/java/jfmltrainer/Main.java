@@ -9,6 +9,33 @@ import jfmltrainer.task.knowledgebasebuilder.KnowledgeBaseBuilder;
 import jfmltrainer.task.metrics.Metrics;
 import jfmltrainer.task.rulebasetrainer.RuleBaseTrainerSelector;
 
+/**************************************************************
+ GNU GENERAL PUBLIC LICENSE - Version 3
+
+ JFML: A Java Library for the IEEE Standard for Fuzzy Markup Language
+ (IEEE Std 1855-2016). Copyright (C) 2017
+
+ JFML-Trainer: A new module for the JFML library to train and
+ tunr FRBS.
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+ Contact information: <https://www.jfml.es>
+
+ Francisco Vigo-García
+ **************************************************************/
+
 public class Main {
 
     public static void main(String[] args) {
