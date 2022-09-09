@@ -1,6 +1,3 @@
-NOTE: This README is meant to be a brief description of this project's usage. For further details, visit www.jfml.es.
-
-
 # JFML - Trainer module
 
 This project is part of the JFML and comprises the processes aimed at learning a Fuzzy Rule Based System (from now on, FRBS). Let it be reminded that a FRBS is mainly made up of a KB plus a RB.
@@ -73,13 +70,18 @@ valueVariable1,valueVariable2,...,valueVariableN,valueOutputVariable
 
 These are the methods implemented so far:
 - Regression:
-  - Wang & Mendel (Standard)
-  - Wang & Mendel (Cordón & Herrera)
-  - TBD
+  - Wang & Mendel
+  - Cordón & Herrera
+  - COR
+  - Thrift
+  - ANFIS
 - Classification:
-  - TBD
+  - Chi
+  - Chi (Cordón & Herrera)
+  - FURIA
 - Tuning:
-  - TBD
+  - Lateral Displacement
+  - Delta Jump
 
 This task needs a KB to work.
 - If a KB file is not provided, it will try to build it if a variable definition file is specified.
